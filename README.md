@@ -87,10 +87,19 @@ Static site — semua editable dengan editor teks biasa:
 
 ## 📄 Dokumen Pendamping (di `/docs/`)
 
-- `Report_A_Visa_Kerja_PMI.docx` — Pemetaan visa lengkap (Word, 49 KB)
-- `Report_B_Country_Deep_Dive.docx` — Deep dive per negara (Word, 60 KB)
-- `Presentasi_Strategi_PMI.pptx` — Slide deck 14 slide (PowerPoint, 331 KB)
-- `Presentasi_Strategi_PMI.pdf` — Versi PDF presentasi (180 KB)
+**Reports (Word, 4 dokumen):**
+- `Report_A_Visa_Kerja_PMI.docx` — Pemetaan visa lengkap (49 KB)
+- `Report_B_Country_Deep_Dive.docx` — Deep dive per negara (60 KB)
+- `Report_C_Supply_Mapping.docx` — Pemetaan SMK/PTV/BLK/LSP + gap analysis (33 KB)
+- `Report_D_Curriculum_Transformation.docx` — Learning path 22 job role × 4 institusi (34 KB)
+
+**PDF siap-cetak (Reports C & D):**
+- `Report_C_Supply_Mapping.pdf` (478 KB)
+- `Report_D_Curriculum_Transformation.pdf` (514 KB)
+
+**Presentasi Eksekutif:**
+- `Presentasi_Strategi_PMI.pptx` — 14 slide, Patrick Winston framework (331 KB)
+- `Presentasi_Strategi_PMI.pdf` — Versi PDF (180 KB)
 
 ---
 
