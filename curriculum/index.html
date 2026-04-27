@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Report D — Mapping kurikulum vokasi Indonesia vs learning path PMI per job role. Status aligned/partial/missing per institusi.">
+<title>Curriculum Transformation — Mapping Aligned/Partial/Missing · Strategi PMI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/assets/shared.css">
+<style>
+  .status-aligned { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+  .status-partial { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
+  .status-missing { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+
+  .matrix-cell { padding: 8px; text-align: center; font-size: 12px; font-weight: 600; border: 1px solid #F3F4F6; transition: all 0.15s; cursor: pointer; }
+  .matrix-cell:hover { transform: scale(1.05); z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .matrix-cell.aligned { background: #C8E6C9; color: #1B5E20; }
+  .matrix-cell.partial { background: #FFE0B2; color: #BF360C; }
+  .matrix-cell.missing { background: #FFCDD2; color: #B71C1C; }
+
+  .role-card { transition: all 0.15s; cursor: pointer; }
+  .role-card:hover { border-color: #8B0000; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(139,0,0,0.1); }
+
+  .filter-pill { transition: all 0.15s; cursor: pointer; user-select: none; }
+  .filter-pill.active { background: #8B0000; color: white; border-color: #8B0000; }
+
+  .priority-card { background: linear-gradient(135deg, #8B0000 0%, #B22222 100%); }
+
+  .modal-backdrop { background: rgba(0,0,0,0.6); }
+
+  .coverage-bar { height: 6px; background: #F3F4F6; border-radius: 3px; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- SHARED NAV -->
+<nav class="site-nav">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
+    <a href="/" class="brand-mark">
+      <span class="dot"></span>
+      <span>Strategi PMI</span>
+      <span class="text-xs font-normal text-gray-500 ml-1 hidden sm:inline">· KemenP2MI</span>
+    </a>
+    <div class="flex items-center gap-1 text-sm flex-wrap">
+      <a href="/">Beranda</a>
+      <a href="/visa">Pemetaan Visa</a>
+      <a href="/deep-dive">Deep Dive</a>
+      <a href="/supply">Supply Mapping</a>
+      <a href="/curriculum" class="active">Kurikulum</a>
+    </div>
+  </div>
+</nav>
+
+<header class="gradient-header text-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-6 py-10">
+    <p class="text-sm uppercase tracking-widest text-yellow-200 font-semibold">Report D — Curriculum Transformation</p>
+    <h1 class="text-3xl md:text-4xl font-bold mt-1">Learning Path PMI ↔ Kurikulum Vokasi</h1>
+    <p class="text-red-100 mt-2 text-sm md:text-base">22 job role · 4 jenis lembaga · status aligned / partial / missing per institusi</p>
+  </div>
+</header>
+
+<!-- LEGEND & STATS -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <div class="grid md:grid-cols-4 gap-4">
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <p class="text-xs uppercase font-bold text-gray-500">SMK Coverage</p>
+      <div class="text-2xl font-bold text-red-800 mt-1" id="kpiSmk">51.5%</div>
+      <div class="coverage-bar mt-2"><div style="width: 51.5%; height: 100%; background: #8B0000;"></div></div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <p class="text-xs uppercase font-bold text-gray-500">PT Vokasi Coverage</p>
+      <div class="text-2xl font-bold text-blue-900 mt-1" id="kpiPtv">60.4%</div>
+      <div class="coverage-bar mt-2"><div style="width: 60.4%; height: 100%; background: #1E3A5F;"></div></div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <p class="text-xs uppercase font-bold text-gray-500">BLK Coverage</p>
+      <div class="text-2xl font-bold text-green-800 mt-1" id="kpiBlk">65.4%</div>
+      <div class="coverage-bar mt-2"><div style="width: 65.4%; height: 100%; background: #2E7D32;"></div></div>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-4">
+      <p class="text-xs uppercase font-bold text-gray-500">LSP Coverage</p>
+      <div class="text-2xl font-bold text-yellow-700 mt-1" id="kpiLsp">67.0%</div>
+      <div class="coverage-bar mt-2"><div style="width: 67%; height: 100%; background: #F4B400;"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- FILTER -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <div class="bg-white rounded-xl shadow-sm p-4">
+    <div class="flex items-center gap-2 flex-wrap">
+      <span class="text-xs uppercase font-bold text-gray-500 mr-2">Filter Job Family:</span>
+      <button class="filter-pill active px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="all">Semua</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Caregiving & Healthcare">Caregiving</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Construction & Trades">Construction</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Manufacturing & Industrial">Manufacturing</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Hospitality & Food Service">Hospitality</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Agriculture & Fisheries">Agriculture</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Domestic Services">Domestic</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Automotive & Maintenance">Automotive</button>
+      <button class="filter-pill px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Cleaning & Building Services">Cleaning</button>
+    </div>
+  </div>
+</section>
+
+<!-- LEGEND -->
+<section class="max-w-7xl mx-auto px-6 mt-4">
+  <div class="flex items-center gap-4 flex-wrap text-sm">
+    <span class="text-xs uppercase font-bold text-gray-500">Legend:</span>
+    <span class="status-aligned px-3 py-1 rounded-full text-xs font-semibold">✓ ALIGNED — sudah ada & sesuai</span>
+    <span class="status-partial px-3 py-1 rounded-full text-xs font-semibold">⚠ PARTIAL — ada tapi belum sesuai</span>
+    <span class="status-missing px-3 py-1 rounded-full text-xs font-semibold">✗ MISSING — belum ada</span>
+  </div>
+</section>
+
+<!-- MATRIX VIEW -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="p-6 border-b border-gray-100">
+      <h2 class="text-xl font-bold text-gray-900">Matrix Mapping: Job Role × Institusi Vokasi</h2>
+      <p class="text-sm text-gray-500 mt-1">Klik sel atau row untuk lihat detail learning path</p>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-gray-50 border-b border-gray-200">
+          <tr>
+            <th class="px-4 py-3 text-left font-semibold text-gray-700">Job Role</th>
+            <th class="px-4 py-3 text-left font-semibold text-gray-700">Family</th>
+            <th class="px-4 py-3 text-right font-semibold text-gray-700">Demand PMI</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">SMK</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">PT Vokasi</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">BLK</th>
+            <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">LSP</th>
+          </tr>
+        </thead>
+        <tbody id="matrixBody" class="divide-y divide-gray-100">
+          <!-- filled by JS -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- CHARTS ROW -->
+<section class="max-w-7xl mx-auto px-6 mt-12">
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="font-bold text-gray-900 mb-1">Distribusi Status per Institusi</h3>
+      <p class="text-xs text-gray-500 mb-4">22 job role × 4 jenis lembaga</p>
+      <canvas id="chartStatus" height="240"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="font-bold text-gray-900 mb-1">Average Coverage per Institusi</h3>
+      <p class="text-xs text-gray-500 mb-4">Higher = lebih siap suplai PMI</p>
+      <canvas id="chartCoverage" height="240"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- PRIORITIES -->
+<section class="max-w-7xl mx-auto px-6 mt-12 mb-12">
+  <div class="mb-6">
+    <p class="section-eyebrow">5 Prioritas Transformasi</p>
+    <h2 class="text-2xl font-bold text-gray-900 mt-1">Action plan kurikulum 12 bulan</h2>
+  </div>
+  <div class="grid md:grid-cols-1 gap-3" id="priorityList">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- DETAIL MODAL -->
+<div id="modal" class="modal-backdrop fixed inset-0 hidden flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-red-800 text-white p-6 sticky top-0 z-10">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-yellow-200" id="modalFamily"></p>
+          <h2 class="text-2xl font-bold mt-1" id="modalRole"></h2>
+          <p class="text-red-100 text-sm mt-1" id="modalDest"></p>
+        </div>
+        <button onclick="document.getElementById('modal').classList.add('hidden')" class="text-white/70 hover:text-white text-3xl leading-none">×</button>
+      </div>
+    </div>
+    <div class="p-6" id="modalBody"></div>
+  </div>
+</div>
+
+<footer class="bg-gray-900 text-gray-400 text-xs">
+  <div class="max-w-7xl mx-auto px-6 py-6 text-center">
+    Report D — Curriculum Transformation · KemenP2MI 2026 · Mapping berbasis Kepmen 244/2024 (128 konsentrasi SMK), PDDikti, Kemnaker (47 kejuruan BLK), BNSP (4.280 skema)
+  </div>
+</footer>
+
+<script src="/assets/curriculum_data.js"></script>
+<script>
+const C = CURRICULUM;
+let activeFamily = 'all';
+
+// Status mapping
+const statusLabel = { aligned: '✓', partial: '⚠', missing: '✗' };
+const statusText  = { aligned: 'ALIGNED', partial: 'PARTIAL', missing: 'MISSING' };
+
+function renderMatrix(filter = 'all') {
+  const filtered = filter === 'all' ? C.jobRoles : C.jobRoles.filter(r => r.family === filter);
+  const tbody = document.getElementById('matrixBody');
+  tbody.innerHTML = filtered.map(r => `
+    <tr class="hover:bg-red-50 transition cursor-pointer" onclick="showDetail('${r.id}')">
+      <td class="px-4 py-3 font-semibold text-gray-900">${r.role}</td>
+      <td class="px-4 py-3 text-xs text-gray-500">${r.family}</td>
+      <td class="px-4 py-3 text-right font-mono text-red-800">${r.demandPMI.toLocaleString('id-ID')}</td>
+      <td class="matrix-cell ${r.mapping.smk.status}"  title="${r.mapping.smk.gap}">${statusLabel[r.mapping.smk.status]} ${r.mapping.smk.coverage}%</td>
+      <td class="matrix-cell ${r.mapping.ptv.status}"  title="${r.mapping.ptv.gap}">${statusLabel[r.mapping.ptv.status]} ${r.mapping.ptv.coverage}%</td>
+      <td class="matrix-cell ${r.mapping.blk.status}"  title="${r.mapping.blk.gap}">${statusLabel[r.mapping.blk.status]} ${r.mapping.blk.coverage}%</td>
+      <td class="matrix-cell ${r.mapping.lsp.status}"  title="${r.mapping.lsp.gap}">${statusLabel[r.mapping.lsp.status]} ${r.mapping.lsp.coverage}%</td>
+    </tr>
+  `).join('');
+}
+
+renderMatrix();
+
+// Filter pills
+document.querySelectorAll('.filter-pill').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill').forEach(x => x.classList.remove('active'));
+    b.classList.add('active');
+    activeFamily = b.dataset.family;
+    renderMatrix(activeFamily);
+  });
+});
+
+// Detail modal
+function showDetail(id) {
+  const r = C.jobRoles.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('modalFamily').textContent = r.family + ' · ' + r.jobType;
+  document.getElementById('modalRole').textContent = r.role;
+  document.getElementById('modalDest').textContent = '🎯 Destinasi: ' + r.destinations.join(' · ');
+
+  const lp = r.learningPath;
+  const m = r.mapping;
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <p class="text-xs uppercase font-bold text-red-800 mb-2">📚 Learning Path / Kurikulum Target</p>
+        <div class="bg-red-50 p-4 rounded-lg space-y-3 text-sm">
+          <div>
+            <p class="font-semibold text-gray-900 text-xs uppercase">Core Skills</p>
+            <ul class="mt-1 space-y-0.5 text-xs">${lp.coreSkills.map(s => `<li>· ${s}</li>`).join('')}</ul>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-red-200">
+            <div>
+              <p class="font-semibold text-xs uppercase text-gray-700">Bahasa</p>
+              <p class="text-xs">${lp.language}</p>
+            </div>
+            <div>
+              <p class="font-semibold text-xs uppercase text-gray-700">Durasi</p>
+              <p class="text-xs">${lp.durationMonths} bulan · ${lp.prakerinHours} jam prakerin</p>
+            </div>
+          </div>
+          <div class="pt-2 border-t border-red-200">
+            <p class="font-semibold text-xs uppercase text-gray-700">Sertifikasi Target</p>
+            <ul class="mt-1 space-y-0.5 text-xs">${lp.certifications.map(c => `<li>· ${c}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs uppercase font-bold text-red-800 mb-2">📊 Mapping Status</p>
+        <div class="space-y-2">
+          ${['smk','ptv','blk','lsp'].map(k => {
+            const inst = { smk: 'SMK', ptv: 'PT Vokasi', blk: 'BLK / LPK', lsp: 'LSP / BNSP' }[k];
+            const data = m[k];
+            const fieldName = { smk: 'konsentrasi', ptv: 'jurusan', blk: 'kejuruan', lsp: 'skema' }[k];
+            return `
+              <div class="border border-gray-200 rounded-lg p-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="font-bold text-gray-900 text-sm">${inst}</span>
+                  <span class="status-${data.status} text-xs px-2 py-0.5 rounded-full font-semibold">${statusLabel[data.status]} ${statusText[data.status]}</span>
+                </div>
+                <p class="text-xs text-gray-700"><strong>Mapping:</strong> ${data[fieldName] || '—'}</p>
+                <div class="mt-2 flex items-center gap-2">
+                  <div class="coverage-bar flex-1"><div style="width: ${data.coverage}%; height: 100%; background: ${data.status === 'aligned' ? '#2E7D32' : data.status === 'partial' ? '#E65100' : '#C62828'};"></div></div>
+                  <span class="text-xs font-mono">${data.coverage}%</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-2 italic">${data.gap}</p>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+// Close modal on backdrop click
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target.id === 'modal') document.getElementById('modal').classList.add('hidden');
+});
+
+// --- Status distribution chart ---
+const sd = C.summary.byStatus;
+new Chart(document.getElementById('chartStatus'), {
+  type: 'bar',
+  data: {
+    labels: ['SMK', 'PT Vokasi', 'BLK / LPK', 'LSP / BNSP'],
+    datasets: [
+      { label: '✓ Aligned', data: [sd.smk_aligned, sd.ptv_aligned, sd.blk_aligned, sd.lsp_aligned], backgroundColor: '#2E7D32' },
+      { label: '⚠ Partial', data: [sd.smk_partial, sd.ptv_partial, sd.blk_partial, sd.lsp_partial], backgroundColor: '#E65100' },
+      { label: '✗ Missing', data: [sd.smk_missing, sd.ptv_missing, sd.blk_missing, sd.lsp_missing], backgroundColor: '#C62828' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: {
+      x: { stacked: true },
+      y: { stacked: true, ticks: { stepSize: 5 }, title: { display: true, text: 'Jumlah Job Role (dari 22)' } }
+    }
+  }
+});
+
+// --- Coverage chart ---
+new Chart(document.getElementById('chartCoverage'), {
+  type: 'bar',
+  data: {
+    labels: ['SMK', 'PT Vokasi', 'BLK / LPK', 'LSP / BNSP'],
+    datasets: [{
+      label: 'Avg Coverage %',
+      data: [C.summary.averageCoverage.smk, C.summary.averageCoverage.ptv, C.summary.averageCoverage.blk, C.summary.averageCoverage.lsp],
+      backgroundColor: ['#8B0000','#1E3A5F','#2E7D32','#F4B400']
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: { y: { beginAtZero: true, max: 100, ticks: { callback: v => v + '%' } } }
+  }
+});
+
+// --- Priorities ---
+const prioColors = ['#8B0000','#B22222','#1E3A5F','#2E7D32','#F4B400'];
+document.getElementById('priorityList').innerHTML = C.summary.transformationPriorities.map((p, i) => {
+  const m = p.match(/^PRIO\s*(\d+):\s*(.*)/i) || ['', i+1, p];
+  return `
+    <div class="bg-white rounded-xl shadow-sm p-5 border-l-4" style="border-left-color: ${prioColors[i]}">
+      <div class="flex items-start gap-4">
+        <div class="text-3xl font-bold" style="color: ${prioColors[i]}">${i + 1}</div>
+        <div class="flex-1">
+          <p class="text-xs uppercase font-bold tracking-wider" style="color: ${prioColors[i]}">PRIORITAS ${m[1]}</p>
+          <p class="font-semibold text-gray-900 mt-1">${m[2]}</p>
+        </div>
+      </div>
+    </div>
+  `;
+}).join('');
+</script>
+
+</body>
+</html>

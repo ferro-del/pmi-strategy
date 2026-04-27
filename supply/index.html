@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Report C — Supply mapping infrastruktur vokasi Indonesia: SMK, PT Vokasi, BLK, LSP. Demand-supply gap analysis untuk PMI placement strategy.">
+<title>Supply Mapping — Infrastruktur Vokasi Indonesia · Strategi PMI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/assets/shared.css">
+<style>
+  .pillar-card { transition: all 0.25s ease; cursor: pointer; }
+  .pillar-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(139,0,0,0.15); }
+  .pillar-card.smk { border-top: 4px solid #8B0000; }
+  .pillar-card.ptv { border-top: 4px solid #1E3A5F; }
+  .pillar-card.blk { border-top: 4px solid #2E7D32; }
+  .pillar-card.lsp { border-top: 4px solid #F4B400; }
+  .gap-row { transition: background 0.15s; }
+  .gap-row:hover { background: #FFF5F5; }
+  .status-green { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+  .status-yellow { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
+  .status-red { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+  .verdict-box { background: linear-gradient(135deg, #FFF1F1 0%, #FFFBEB 100%); border: 2px solid #F4B400; }
+  .index-bar { height: 8px; background: #F3F4F6; border-radius: 4px; overflow: hidden; }
+  .index-fill { height: 100%; transition: width 0.6s ease; }
+  .heat-cell { transition: all 0.15s; }
+  .heat-cell:hover { transform: scale(1.05); z-index: 10; position: relative; }
+</style>
+</head>
+<body>
+
+<!-- SHARED NAV -->
+<nav class="site-nav">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
+    <a href="/" class="brand-mark">
+      <span class="dot"></span>
+      <span>Strategi PMI</span>
+      <span class="text-xs font-normal text-gray-500 ml-1 hidden sm:inline">· KemenP2MI</span>
+    </a>
+    <div class="flex items-center gap-1 text-sm flex-wrap">
+      <a href="/">Beranda</a>
+      <a href="/visa">Pemetaan Visa</a>
+      <a href="/deep-dive">Deep Dive</a>
+      <a href="/supply" class="active">Supply Mapping</a>
+      <a href="/curriculum">Kurikulum</a>
+    </div>
+  </div>
+</nav>
+
+<header class="gradient-header text-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-6 py-10">
+    <p class="text-sm uppercase tracking-widest text-yellow-200 font-semibold">Report C — Supply Mapping</p>
+    <h1 class="text-3xl md:text-4xl font-bold mt-1">Infrastruktur Vokasi Indonesia</h1>
+    <p class="text-red-100 mt-2 text-sm md:text-base">SMK · Perguruan Tinggi Vokasi · BLK/LPK · Lembaga Sertifikasi Profesi · Demand-Supply Gap Analysis</p>
+  </div>
+</header>
+
+<!-- KEY QUESTION BANNER -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <div class="bg-yellow-50 border-l-4 border-yellow-500 p-5 rounded-r-lg">
+    <p class="text-xs uppercase font-bold tracking-wider text-yellow-800">Pertanyaan Utama</p>
+    <p class="mt-2 text-lg font-semibold text-gray-800">Apakah Indonesia punya lembaga pendidikan, kurikulum, dan infrastruktur untuk menyuplai demand kerja PMI di Report B?</p>
+    <p class="mt-1 text-sm text-gray-600">Verdict + readiness index ada di akhir halaman ↓</p>
+  </div>
+</section>
+
+<!-- KPI ROW -->
+<section class="max-w-7xl mx-auto px-6 mt-6">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="stat-card border-t-4 border-red-700">
+      <div class="text-3xl font-bold text-red-800">25.642</div>
+      <div class="text-sm text-gray-500 mt-1">Total Lembaga Vokasi</div>
+      <div class="text-xs text-gray-400 mt-0.5">SMK + PTV + BLK + LPK + LSP</div>
+    </div>
+    <div class="stat-card border-t-4 border-blue-800">
+      <div class="text-3xl font-bold text-blue-900">2,24 Jt</div>
+      <div class="text-sm text-gray-500 mt-1">Lulusan Vokasi/Tahun</div>
+      <div class="text-xs text-gray-400 mt-0.5">SMK 1,45M + PTV 218K + BLK 558K</div>
+    </div>
+    <div class="stat-card border-t-4 border-green-700">
+      <div class="text-3xl font-bold text-green-800">1,37 Jt</div>
+      <div class="text-sm text-gray-500 mt-1">Asesi Bersertifikasi (BNSP 2024)</div>
+      <div class="text-xs text-gray-400 mt-0.5">+11,55% YoY</div>
+    </div>
+    <div class="stat-card border-t-4 border-yellow-600">
+      <div class="text-3xl font-bold text-yellow-700">41,2 / 100</div>
+      <div class="text-sm text-gray-500 mt-1">PMI Readiness Index</div>
+      <div class="text-xs text-gray-400 mt-0.5">Score: C+ (gap kritis)</div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 PILLAR CARDS -->
+<section class="max-w-7xl mx-auto px-6 mt-12">
+  <div class="mb-6">
+    <p class="section-eyebrow">Empat Pilar Infrastruktur</p>
+    <h2 class="text-2xl font-bold text-gray-900 mt-1">Klik pilar untuk detail</h2>
+  </div>
+  <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+
+    <div class="pillar-card smk bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('smk')">
+      <div class="flex justify-between items-start">
+        <div class="text-3xl">🏫</div>
+        <span class="text-xs font-bold text-red-800 bg-red-50 px-2 py-1 rounded">A</span>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mt-3">SMK</h3>
+      <p class="text-xs text-gray-500">Sekolah Menengah Kejuruan</p>
+      <div class="mt-4 space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="text-gray-500">Total</span><span class="font-bold">14.442</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Siswa</span><span class="font-bold">5,08 jt</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Lulusan/th</span><span class="font-bold">1,45 jt</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Konsentrasi</span><span class="font-bold">128</span></div>
+      </div>
+    </div>
+
+    <div class="pillar-card ptv bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('ptv')">
+      <div class="flex justify-between items-start">
+        <div class="text-3xl">🎓</div>
+        <span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-1 rounded">B</span>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mt-3">PT Vokasi</h3>
+      <p class="text-xs text-gray-500">Politeknik & Akademi</p>
+      <div class="mt-4 space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="text-gray-500">Total</span><span class="font-bold">266</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Mahasiswa</span><span class="font-bold">904K</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Lulusan/th</span><span class="font-bold">218K</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Prodi</span><span class="font-bold">287</span></div>
+      </div>
+    </div>
+
+    <div class="pillar-card blk bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('blk')">
+      <div class="flex justify-between items-start">
+        <div class="text-3xl">🛠️</div>
+        <span class="text-xs font-bold text-green-800 bg-green-50 px-2 py-1 rounded">C</span>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mt-3">BLK / LPK</h3>
+      <p class="text-xs text-gray-500">Balai & Lembaga Pelatihan</p>
+      <div class="mt-4 space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="text-gray-500">BLK Pemerintah</span><span class="font-bold">303</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">BLKK</span><span class="font-bold">4.800</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">LPK Swasta</span><span class="font-bold">17.850</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Kapasitas/th</span><span class="font-bold">615K</span></div>
+      </div>
+    </div>
+
+    <div class="pillar-card lsp bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('lsp')">
+      <div class="flex justify-between items-start">
+        <div class="text-3xl">📜</div>
+        <span class="text-xs font-bold text-yellow-700 bg-yellow-50 px-2 py-1 rounded">D</span>
+      </div>
+      <h3 class="text-lg font-bold text-gray-900 mt-3">LSP / BNSP</h3>
+      <p class="text-xs text-gray-500">Lembaga Sertifikasi Profesi</p>
+      <div class="mt-4 space-y-1.5 text-sm">
+        <div class="flex justify-between"><span class="text-gray-500">Total LSP</span><span class="font-bold">1.981</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">P1 / P2 / P3</span><span class="font-bold text-xs">1333/129/519</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Skema</span><span class="font-bold">4.280</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Asesi 2024</span><span class="font-bold">1,37 jt</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DETAILED PILLAR PANEL -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <div id="pillar-detail" class="bg-white rounded-xl shadow-sm p-6">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- CHARTS ROW -->
+<section class="max-w-7xl mx-auto px-6 mt-12">
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="font-bold text-gray-900 mb-1">Tren Jumlah Lulusan Vokasi 5 Tahun</h3>
+      <p class="text-xs text-gray-500 mb-4">Konsolidasi: SMK + PT Vokasi + BLK</p>
+      <canvas id="chartTrend" height="240"></canvas>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm p-6">
+      <h3 class="font-bold text-gray-900 mb-1">Distribusi Geografis SMK & BLK</h3>
+      <p class="text-xs text-gray-500 mb-4">Top 10 provinsi (kapasitas lulusan)</p>
+      <canvas id="chartGeo" height="240"></canvas>
+    </div>
+  </div>
+</section>
+
+<!-- GAP ANALYSIS -->
+<section class="max-w-7xl mx-auto px-6 mt-12">
+  <div class="mb-6">
+    <p class="section-eyebrow">Demand–Supply Gap Analysis</p>
+    <h2 class="text-2xl font-bold text-gray-900 mt-1">Per Job Family (cross-ref Report B)</h2>
+    <p class="text-sm text-gray-600 mt-1">Total demand PMI 2029: <span class="font-semibold text-red-800">480.000/tahun</span> · Total kapasitas vokasi: <span class="font-semibold text-green-800">2,24 juta lulusan/tahun</span></p>
+  </div>
+
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="w-full text-sm">
+      <thead class="bg-red-800 text-white">
+        <tr>
+          <th class="px-4 py-3 text-left">Job Family</th>
+          <th class="px-4 py-3 text-right">Demand PMI</th>
+          <th class="px-4 py-3 text-right">Supply (Lulusan)</th>
+          <th class="px-4 py-3 text-right">Cert (Asesi)</th>
+          <th class="px-4 py-3 text-left">Status</th>
+          <th class="px-4 py-3 text-left">Catatan</th>
+        </tr>
+      </thead>
+      <tbody id="gapTable" class="divide-y divide-gray-100">
+        <!-- filled by JS -->
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- GAP PER DESTINATION -->
+<section class="max-w-7xl mx-auto px-6 mt-12">
+  <div class="mb-6">
+    <p class="section-eyebrow">Bottleneck per Negara Tujuan</p>
+    <h2 class="text-2xl font-bold text-gray-900 mt-1">Gap kuantitatif PMI siap-deploy vs demand</h2>
+  </div>
+  <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="destGapGrid">
+    <!-- filled by JS -->
+  </div>
+</section>
+
+<!-- VERDICT -->
+<section class="max-w-7xl mx-auto px-6 mt-12 mb-12">
+  <div class="verdict-box rounded-xl p-8">
+    <p class="text-xs uppercase font-bold tracking-wider text-yellow-800">Verdict</p>
+    <h2 class="text-3xl font-bold text-gray-900 mt-2">SUFFICIENT — with MAJOR GAPS</h2>
+    <p class="mt-3 text-gray-700 leading-relaxed">
+      Indonesia memiliki <strong>infrastruktur vokasi yang cukup secara volume</strong> — 14.442 SMK, 266 PTV, 22.953 LPK — total kapasitas lulusan <strong>~2,24 juta/tahun</strong>. Namun terdapat <strong>4 gap kritikal</strong> yang membuat hanya <strong>16,3%</strong> yang siap di-deploy ke pasar PMI internasional.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-4 mt-6">
+      <div class="bg-white p-4 rounded-lg border border-yellow-200">
+        <p class="font-bold text-gray-900">⚠️ Gap 1 — Kurikulum</p>
+        <p class="text-sm text-gray-600 mt-1">73% kurikulum vokasi tidak align dengan demand spesifik PMI (mis: SMK Las belum cover JIS/AWS welding standard)</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-yellow-200">
+        <p class="font-bold text-gray-900">⚠️ Gap 2 — Bahasa</p>
+        <p class="text-sm text-gray-600 mt-1">Hanya 8% lulusan punya kemampuan bahasa target negara (JLPT N4, EPS-TOPIK, B1 Jerman)</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-yellow-200">
+        <p class="font-bold text-gray-900">⚠️ Gap 3 — Sertifikasi</p>
+        <p class="text-sm text-gray-600 mt-1">LSP PMI cuma 6,5% dari ekosistem; sertifikat domestik tidak diakui di mayoritas negara tujuan</p>
+      </div>
+      <div class="bg-white p-4 rounded-lg border border-yellow-200">
+        <p class="font-bold text-gray-900">⚠️ Gap 4 — Geografis</p>
+        <p class="text-sm text-gray-600 mt-1">51-53% kapasitas di Jawa, sementara recruitment PMI banyak dari NTT, NTB, Jatim, Sulawesi</p>
+      </div>
+    </div>
+
+    <div class="mt-8">
+      <p class="text-xs uppercase font-bold tracking-wider text-gray-700 mb-3">Readiness Index Breakdown</p>
+      <div id="readinessBars" class="space-y-3"></div>
+    </div>
+  </div>
+</section>
+
+<footer class="bg-gray-900 text-gray-400 text-xs">
+  <div class="max-w-7xl mx-auto px-6 py-6 text-center">
+    Report C — Supply Mapping Infrastruktur Vokasi · KemenP2MI 2026 · Sumber: Pusdatin Kemendikbud · PDDikti · Kemnaker Satudata · BNSP Laporan Kinerja 2024 · BPS Sakernas 2023
+  </div>
+</footer>
+
+<script src="/assets/supply_data.js"></script>
+<script>
+const S = SUPPLY;
+
+// --- TREND CHART ---
+const trendData = {
+  labels: ['2020/21','2021/22','2022/23','2023/24','2024/25'],
+  smk: S.smk.enrollmentTrend.map(d => d.lulusan),
+  ptv: S.ptVokasi.enrollmentTrend.map(d => d.lulusan),
+  blk: S.blk.growthTrend.map(d => Math.round(d.capacity * 0.91))  // assume 91% completion
+};
+new Chart(document.getElementById('chartTrend'), {
+  type: 'line',
+  data: {
+    labels: trendData.labels,
+    datasets: [
+      { label: 'SMK', data: trendData.smk, borderColor: '#8B0000', backgroundColor: 'rgba(139,0,0,0.1)', fill: true, tension: 0.3 },
+      { label: 'PT Vokasi', data: trendData.ptv, borderColor: '#1E3A5F', backgroundColor: 'rgba(30,58,95,0.1)', fill: true, tension: 0.3 },
+      { label: 'BLK/LPK', data: trendData.blk, borderColor: '#2E7D32', backgroundColor: 'rgba(46,125,50,0.1)', fill: true, tension: 0.3 }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { position: 'bottom' } },
+    scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000) + 'K' } } }
+  }
+});
+
+// --- GEO CHART (top 10 provinces by combined SMK+BLK capacity) ---
+const geoCombined = S.smk.byProvince.slice(0,10).map(p => ({
+  province: p.province,
+  smkLulusan: Math.round(p.students * 0.285),
+  blkCapacity: (S.blk.byProvince.find(b => b.province === p.province) || {}).capacity || 0
+}));
+new Chart(document.getElementById('chartGeo'), {
+  type: 'bar',
+  data: {
+    labels: geoCombined.map(g => g.province),
+    datasets: [
+      { label: 'SMK Lulusan/th', data: geoCombined.map(g => g.smkLulusan), backgroundColor: '#8B0000' },
+      { label: 'BLK Kapasitas/th', data: geoCombined.map(g => g.blkCapacity), backgroundColor: '#2E7D32' }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+    plugins: { legend: { position: 'bottom' } },
+    scales: { x: { stacked: false, ticks: { callback: v => (v/1000) + 'K' } }, y: { stacked: false } }
+  }
+});
+
+// --- GAP TABLE ---
+const gapTable = document.getElementById('gapTable');
+gapTable.innerHTML = S.gap.perJobFamily.map(g => {
+  const colorMap = { green: 'status-green', yellow: 'status-yellow', red: 'status-red' };
+  const labelMap = { green: '✓ SURPLUS', yellow: '⚠ GAP', red: '✗ KRITIS' };
+  return `
+    <tr class="gap-row">
+      <td class="px-4 py-3 font-semibold text-gray-900">${g.family}</td>
+      <td class="px-4 py-3 text-right text-red-800 font-mono">${g.demandPMI.toLocaleString('id-ID')}</td>
+      <td class="px-4 py-3 text-right text-green-800 font-mono">${g.supply.toLocaleString('id-ID')}</td>
+      <td class="px-4 py-3 text-right text-blue-800 font-mono">${g.lspCert.toLocaleString('id-ID')}</td>
+      <td class="px-4 py-3"><span class="${colorMap[g.color]} text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap">${labelMap[g.color]}</span></td>
+      <td class="px-4 py-3 text-xs text-gray-600 max-w-md">${g.gap}</td>
+    </tr>
+  `;
+}).join('');
+
+// --- DEST GAP GRID ---
+const destGrid = document.getElementById('destGapGrid');
+destGrid.innerHTML = S.gap.perDestination.map(d => {
+  const severity = d.gapPct < -80 ? 'red' : d.gapPct < -50 ? 'orange' : 'yellow';
+  const color = { red: 'border-red-500 bg-red-50', orange: 'border-orange-500 bg-orange-50', yellow: 'border-yellow-500 bg-yellow-50' }[severity];
+  return `
+    <div class="bg-white border-l-4 ${color} rounded-r-lg p-4 shadow-sm">
+      <h3 class="font-bold text-gray-900">${d.country}</h3>
+      <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
+        <div><div class="text-xs text-gray-500">Demand</div><div class="font-mono text-gray-900">${(d.demandPMI/1000).toFixed(0)}K</div></div>
+        <div><div class="text-xs text-gray-500">Siap-deploy</div><div class="font-mono text-gray-900">${(d.supplyReady/1000).toFixed(1)}K</div></div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-gray-200">
+        <div class="text-xs text-gray-500">Gap</div>
+        <div class="text-2xl font-bold text-red-700">${d.gapPct}%</div>
+      </div>
+      <p class="text-xs text-gray-600 mt-2"><strong>Bottleneck:</strong> ${d.bottleneck}</p>
+    </div>
+  `;
+}).join('');
+
+// --- READINESS BARS ---
+const ri = S.gap.answerToMainQuestion.readinessIndex;
+const bars = [
+  { label: 'Infrastruktur (lembaga, gedung, kapasitas)', value: ri.infrastruktur, color: '#2E7D32' },
+  { label: 'Kurikulum (alignment dengan demand intl)', value: ri.kurikulum, color: '#E65100' },
+  { label: 'Bahasa target negara', value: ri.bahasa, color: '#C62828' },
+  { label: 'Sertifikasi', value: ri.sertifikasi, color: '#E65100' },
+  { label: 'Akreditasi internasional / MRA', value: ri.akreditasi_internasional, color: '#C62828' }
+];
+document.getElementById('readinessBars').innerHTML = bars.map(b => `
+  <div>
+    <div class="flex justify-between text-sm mb-1">
+      <span class="text-gray-700">${b.label}</span>
+      <span class="font-mono font-semibold" style="color: ${b.color}">${b.value}/100</span>
+    </div>
+    <div class="index-bar"><div class="index-fill" style="width: ${b.value}%; background: ${b.color}"></div></div>
+  </div>
+`).join('');
+
+// --- PILLAR DETAIL ---
+function showPillar(key) {
+  const detail = document.getElementById('pillar-detail');
+  let html = '';
+  if (key === 'smk') {
+    const d = S.smk;
+    html = `
+      <div class="flex items-center gap-3 mb-4">
+        <div class="text-3xl">🏫</div>
+        <div>
+          <h3 class="text-xl font-bold">SMK — Sekolah Menengah Kejuruan</h3>
+          <p class="text-sm text-gray-500">${d.overview.regulasi}</p>
+        </div>
+      </div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-xs uppercase font-bold text-red-800 mb-2">10 Bidang Keahlian (Kurikulum Merdeka)</p>
+          <div class="space-y-1.5 max-h-72 overflow-y-auto pr-2">
+            ${d.bidangKeahlian.map(b => `
+              <div class="border-l-3 border-red-700 pl-3 py-1">
+                <div class="flex justify-between"><span class="font-medium text-sm">${b.name}</span><span class="text-xs text-gray-500">${b.share}%</span></div>
+                <div class="text-xs text-gray-500">${b.programCount} program · ${b.konsentrasiCount} konsentrasi · ${(b.students/1000).toFixed(0)}K siswa</div>
+                ${b.relevanPMI.length ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${b.relevanPMI.join(', ')}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+        <div>
+          <p class="text-xs uppercase font-bold text-red-800 mb-2">Top 10 Konsentrasi by Enrollment</p>
+          <div class="space-y-1.5 max-h-72 overflow-y-auto pr-2">
+            ${d.topPrograms.slice(0,10).map(p => `
+              <div class="bg-gray-50 p-2 rounded text-sm">
+                <div class="flex justify-between"><span class="font-medium">${p.name}</span>
+                  <span class="${p.growth >= 0 ? 'text-green-700' : 'text-red-700'} text-xs font-mono">${p.growth >= 0 ? '+' : ''}${p.growth}%</span></div>
+                <div class="text-xs text-gray-500">${(p.students/1000).toFixed(0)}K siswa · ${(p.lulusan/1000).toFixed(0)}K lulusan/th</div>
+                ${p.jobAlign.length ? `<div class="text-xs text-blue-700 mt-0.5">→ ${p.jobAlign.slice(0,2).join(' · ')}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="mt-6 grid md:grid-cols-3 gap-3 text-sm">
+        <div class="bg-red-50 p-3 rounded"><div class="text-xs text-red-700 font-bold">OUTCOMES LULUSAN</div>
+          <div class="mt-1 text-xs">Bekerja: <strong>${d.outcomes.bekerja}%</strong> · Lanjut: ${d.outcomes.lanjut}% · Wirausaha: ${d.outcomes.wirausaha}% · Nganggur: ${d.outcomes.nganggur}%</div></div>
+        <div class="bg-yellow-50 p-3 rounded col-span-2"><div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+          <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul></div>
+      </div>
+    `;
+  } else if (key === 'ptv') {
+    const d = S.ptVokasi;
+    html = `
+      <div class="flex items-center gap-3 mb-4"><div class="text-3xl">🎓</div>
+        <div><h3 class="text-xl font-bold">PT Vokasi</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-xs uppercase font-bold text-blue-900 mb-2">Rumpun Ilmu</p>
+          <div class="space-y-1.5">${d.rumpunIlmu.map(r => `
+            <div class="border-l-3 border-blue-900 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${r.name}</span><span class="text-xs text-gray-500">${r.share}%</span></div>
+              <div class="text-xs text-gray-500">${(r.students/1000).toFixed(0)}K mhs · ${(r.lulusan/1000).toFixed(1)}K lulusan/th</div>
+              ${r.relevanPMI.length ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${r.relevanPMI.join(', ')}</div>` : ''}
+            </div>`).join('')}</div>
+        </div>
+        <div>
+          <p class="text-xs uppercase font-bold text-blue-900 mb-2">Top Politeknik Negeri</p>
+          <div class="space-y-1.5">${d.topPolnas.map(p => `
+            <div class="bg-gray-50 p-2 rounded text-sm">
+              <div class="font-medium">${p.name}</div>
+              <div class="text-xs text-gray-500">${p.province} · ${p.students.toLocaleString('id-ID')} mhs · ${p.jurusan} jurusan</div>
+              <div class="text-xs text-blue-700 mt-0.5">Fokus: ${p.focus}</div>
+            </div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="mt-6 grid md:grid-cols-3 gap-3 text-sm">
+        <div class="bg-blue-50 p-3 rounded"><div class="text-xs text-blue-800 font-bold">OUTCOMES</div>
+          <div class="mt-1 text-xs">Bekerja: <strong>${d.outcomes.bekerja}%</strong> · ${d.bekerjaSebelumLulus}% bekerja sebelum lulus · Wirausaha ${d.outcomes.wirausaha}%</div></div>
+        <div class="bg-yellow-50 p-3 rounded col-span-2"><div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+          <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul></div>
+      </div>
+    `;
+  } else if (key === 'blk') {
+    const d = S.blk;
+    html = `
+      <div class="flex items-center gap-3 mb-4"><div class="text-3xl">🛠️</div>
+        <div><h3 class="text-xl font-bold">BLK / LPK</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-xs uppercase font-bold text-green-800 mb-2">Top Kejuruan (47 standar Kemnaker)</p>
+          <div class="space-y-1.5 max-h-80 overflow-y-auto pr-2">${d.kejuruanUtama.map(k => `
+            <div class="border-l-3 border-green-700 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${k.name}</span><span class="text-xs text-gray-500">${k.ratio}%</span></div>
+              <div class="text-xs text-gray-500">${(k.peserta/1000).toFixed(1)}K peserta · ${(k.lulusan/1000).toFixed(1)}K lulusan/th</div>
+              ${k.relevanPMI.length ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${k.relevanPMI.slice(0,3).join(', ')}</div>` : ''}
+            </div>`).join('')}</div>
+        </div>
+        <div>
+          <p class="text-xs uppercase font-bold text-green-800 mb-2">BP2MI-Specific</p>
+          <div class="bg-green-50 p-4 rounded-lg space-y-2 text-sm">
+            <div><strong>${d.bp2miSpecific.lpkAccredited.toLocaleString('id-ID')}</strong> LPK terakreditasi BP2MI dari ${d.overview.totalLPK.toLocaleString('id-ID')} (5,6%)</div>
+            <div><strong>${d.bp2miSpecific.lpkSSWAccredited}</strong> LPK akreditasi SSW Jepang</div>
+            <div><strong>${d.bp2miSpecific.lpkEPSAccredited}</strong> LPK akreditasi EPS Korea</div>
+            <div>Avg placement rate: <strong>${d.bp2miSpecific.avgPlacementRate}%</strong></div>
+            <div class="text-xs mt-2">Top jurusan PMI: ${d.bp2miSpecific.topJurusan.join(' · ')}</div>
+          </div>
+          <p class="text-xs uppercase font-bold text-green-800 mb-2 mt-4">Pertumbuhan 5 Tahun</p>
+          <div class="space-y-1 text-sm">${d.growthTrend.map(t => `
+            <div class="flex justify-between border-b border-gray-100 py-1">
+              <span class="text-gray-600">${t.year}</span>
+              <span class="font-mono">${(t.capacity/1000).toFixed(0)}K kapasitas</span>
+            </div>`).join('')}</div>
+        </div>
+      </div>
+      <div class="mt-6 bg-yellow-50 p-3 rounded text-sm">
+        <div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+        <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul>
+      </div>
+    `;
+  } else if (key === 'lsp') {
+    const d = S.lsp;
+    html = `
+      <div class="flex items-center gap-3 mb-4"><div class="text-3xl">📜</div>
+        <div><h3 class="text-xl font-bold">LSP / BNSP</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <p class="text-xs uppercase font-bold text-yellow-700 mb-2">Sektor Skema Sertifikasi</p>
+          <div class="space-y-1.5">${d.sektorSkema.map(s => `
+            <div class="border-l-3 border-yellow-600 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${s.name}</span><span class="text-xs text-green-700 font-mono">+${s.growth}%</span></div>
+              <div class="text-xs text-gray-500">${s.count} skema · ${(s.asesi/1000).toFixed(0)}K asesi/th</div>
+              ${s.relevanPMI.length && s.relevanPMI[0] !== 'Limited' ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${s.relevanPMI.slice(0,3).join(', ')}</div>` : ''}
+            </div>`).join('')}</div>
+        </div>
+        <div>
+          <p class="text-xs uppercase font-bold text-yellow-700 mb-2">PMI-Specific</p>
+          <div class="bg-yellow-50 p-4 rounded-lg space-y-2 text-sm">
+            <div><strong>${d.pmiSpecific.lspP3PMI}</strong> LSP P3 fokus PMI · <strong>${d.pmiSpecific.skemaPMI}</strong> skema</div>
+            <div>Asesi PMI 2024: <strong>${d.pmiSpecific.asesiPMI2024.toLocaleString('id-ID')}</strong> (${d.pmiSpecific.pctTotal}% dari total)</div>
+            <div class="mt-2 text-xs"><strong>Skema utama:</strong></div>
+            <ul class="text-xs space-y-0.5">${d.pmiSpecific.mainSkema.map(s => `<li>· ${s}</li>`).join('')}</ul>
+          </div>
+          <p class="text-xs uppercase font-bold text-yellow-700 mb-2 mt-4">Tren Asesi 5 Tahun</p>
+          <canvas id="chartLspTrend" height="120"></canvas>
+        </div>
+      </div>
+      <div class="mt-6 bg-yellow-50 p-3 rounded text-sm">
+        <div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+        <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul>
+      </div>
+    `;
+  }
+  detail.innerHTML = html;
+
+  // Render LSP trend chart if applicable
+  if (key === 'lsp') {
+    new Chart(document.getElementById('chartLspTrend'), {
+      type: 'line',
+      data: {
+        labels: S.lsp.asesiTrend.map(t => t.year),
+        datasets: [{ label: 'Asesi', data: S.lsp.asesiTrend.map(t => t.asesi), borderColor: '#F4B400', backgroundColor: 'rgba(244,180,0,0.15)', fill: true, tension: 0.3 }]
+      },
+      options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true, ticks: { callback: v => (v/1000) + 'K' } } } }
+    });
+  }
+}
+
+// Initial render
+showPillar('smk');
+</script>
+
+</body>
+</html>
