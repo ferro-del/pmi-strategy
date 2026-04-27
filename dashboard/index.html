@@ -891,17 +891,39 @@
     </div>
 
     <!-- Filter -->
-    <div class="bg-white rounded-xl shadow-sm p-4 mb-4 flex items-center gap-2 flex-wrap">
-      <span class="text-xs uppercase font-bold text-gray-500 mr-2">Job Family:</span>
-      <button class="filter-pill-d active px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="all">Semua</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Caregiving & Healthcare">Caregiving</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Construction & Trades">Construction</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Manufacturing & Industrial">Manufacturing</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Hospitality & Food Service">Hospitality</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Agriculture & Fisheries">Agriculture</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Domestic Services">Domestic</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Automotive & Maintenance">Automotive</button>
-      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Cleaning & Building Services">Cleaning</button>
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-4 space-y-3">
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="text-xs uppercase font-bold text-gray-500 mr-2">Job Family:</span>
+        <button class="filter-pill-d active px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="all">Semua</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Caregiving & Healthcare">Caregiving</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Construction & Trades">Construction</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Manufacturing & Industrial">Manufacturing</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Hospitality & Food Service">Hospitality</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Agriculture & Fisheries">Agriculture</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Domestic Services">Domestic</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Automotive & Maintenance">Automotive</button>
+        <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Cleaning & Building Services">Cleaning</button>
+      </div>
+      <div class="flex items-start gap-2 flex-wrap pt-3 border-t border-gray-100">
+        <span class="text-xs uppercase font-bold text-gray-500 mr-2 mt-1.5">Negara Tujuan:</span>
+        <button class="filter-pill-c active px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="all">Semua</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="JP">🇯🇵 Jepang</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="KR">🇰🇷 Korea</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="TW">🇹🇼 Taiwan</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="HK">🇭🇰 Hong Kong</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="SG">🇸🇬 Singapura</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="AU">🇦🇺 Australia</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="SA">🇸🇦 Saudi</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="AE">🇦🇪 UAE</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="QA">🇶🇦 Qatar</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="BH">🇧🇭 Bahrain</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="KW">🇰🇼 Kuwait</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="IT">🇮🇹 Italia</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="DE">🇩🇪 Jerman</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="CA">🇨🇦 Kanada</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="NL">🇳🇱 Belanda</button>
+        <button class="filter-pill-c px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-country="TR">🇹🇷 Turki</button>
+      </div>
     </div>
 
     <!-- Legend -->
@@ -3279,9 +3301,30 @@ function initSDA() {
 const statusInd = { aligned: '✓', partial: '⚠', missing: '✗' };
 const statusText = { aligned: 'ALIGNED', partial: 'PARTIAL', missing: 'MISSING' };
 
-function renderMatrix(filter='all') {
-  const rows = filter === 'all' ? CURRICULUM.jobRoles : CURRICULUM.jobRoles.filter(r => r.family === filter);
-  document.getElementById('curriculumMatrix').innerHTML = rows.map(r => `
+// Country code → keywords found in CURRICULUM.jobRoles[].destinations
+// (destinations strings vary: "Saudi", "Saudi Arabia", "Saudi (NEOM)",
+// "Jepang (SSW)", "Korea (E-9)", etc. — match on substring).
+const CURRICULUM_COUNTRY_KEYS = {
+  JP: ['Jepang'], KR: ['Korea'], TW: ['Taiwan'], HK: ['Hong Kong'],
+  SG: ['Singapore', 'Singapura'], AU: ['Australia'], SA: ['Saudi'], AE: ['UAE'],
+  QA: ['Qatar'], BH: ['Bahrain'], KW: ['Kuwait'], IT: ['Italia', 'Italy'],
+  DE: ['Jerman'], CA: ['Canada', 'Kanada'], NL: ['Belanda'], TR: ['Turki', 'Turkey']
+};
+let curFamilyFilter = 'all', curCountryFilter = 'all';
+
+function renderMatrix() {
+  let rows = CURRICULUM.jobRoles;
+  if (curFamilyFilter !== 'all') rows = rows.filter(r => r.family === curFamilyFilter);
+  if (curCountryFilter !== 'all') {
+    const keys = CURRICULUM_COUNTRY_KEYS[curCountryFilter] || [];
+    rows = rows.filter(r => r.destinations.some(d => keys.some(k => d.includes(k))));
+  }
+  const tbody = document.getElementById('curriculumMatrix');
+  if (rows.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-sm text-gray-500 italic">Tidak ada job role yang cocok dengan kombinasi filter ini.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = rows.map(r => `
     <tr class="hover:bg-red-50 transition cursor-pointer" onclick="showCurriculumDetail('${r.id}')">
       <td class="px-4 py-3 font-semibold text-gray-900">${r.role}</td>
       <td class="px-4 py-3 text-xs text-gray-500">${r.family}</td>
@@ -3298,7 +3341,17 @@ document.querySelectorAll('.filter-pill-d').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll('.filter-pill-d').forEach(x=>x.classList.remove('active'));
     b.classList.add('active');
-    renderMatrix(b.dataset.family);
+    curFamilyFilter = b.dataset.family;
+    renderMatrix();
+  });
+});
+
+document.querySelectorAll('.filter-pill-c').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill-c').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    curCountryFilter = b.dataset.country;
+    renderMatrix();
   });
 });
 
