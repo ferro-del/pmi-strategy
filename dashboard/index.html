@@ -3053,7 +3053,7 @@ function deriveCounts(role) {
 }
 
 // --- Render Competency Matrix ---
-function renderMatrix(filter = 'all') {
+function renderSDAMatrix(filter = 'all') {
   const rows = filter === 'all' ? CURRICULUM.jobRoles : CURRICULUM.jobRoles.filter(r => r.family === filter);
   const tbody = document.getElementById('matrixBody');
   if (!tbody) return;
@@ -3091,7 +3091,7 @@ document.querySelectorAll('.sda-fam-pill').forEach(b => {
   b.addEventListener('click', () => {
     document.querySelectorAll('.sda-fam-pill').forEach(x => x.classList.remove('active'));
     b.classList.add('active');
-    renderMatrix(b.dataset.family);
+    renderSDAMatrix(b.dataset.family);
   });
 });
 
@@ -3245,7 +3245,7 @@ function renderTopDS() {
 function initSDA() {
   if (window._sdaInited) return;
   window._sdaInited = true;
-  renderMatrix();
+  renderSDAMatrix();
   renderBubble('all');
   renderCrosswalk();
   renderTopDS();
@@ -3351,9 +3351,9 @@ function showCurriculumDetail(id) {
               <span class="text-xs font-mono">${data.coverage}%</span>
             </div>
             <p class="text-xs text-gray-500 mt-2 italic">${data.gap}</p>
-            ${tp && data.status !== 'missing' ? `
+            ${tp ? `
               <div class="mt-3 pt-2 border-t border-gray-100">
-                <div class="text-[10px] uppercase font-bold text-gray-500 mb-2">📍 Throughput & Geographic Breakdown</div>
+                <div class="text-[10px] uppercase font-bold text-gray-500 mb-2">📍 Throughput & Geographic Breakdown${data.status === 'missing' ? ' <span class="text-orange-700">· indikatif (peripheral mapping)</span>' : ''}</div>
                 <div class="grid grid-cols-3 gap-1 mb-2">
                   <div class="throughput-card"><div class="label">Distribusi Lokasi <span class="tip" data-tip="throughput-location">i</span></div><div class="text-xs font-medium text-gray-800 mt-1">${tp.schools}</div></div>
                   ${tp.students !== null && typeof tp.students === 'number' ? `<div class="throughput-card"><div class="label">Siswa Aktif <span class="tip" data-tip="throughput-students">i</span></div><div class="num">${(tp.students/1000).toFixed(0)}K</div><div class="text-[10px] text-gray-500">total nationwide</div></div>` : `<div class="throughput-card"><div class="label">Siswa</div><div class="text-xs">${tp.students || '—'}</div></div>`}
@@ -3363,7 +3363,12 @@ function showCurriculumDetail(id) {
                   <strong>📊 Top 3 provinsi (estimasi):</strong> ${k === 'smk' ? 'Jabar 19,3% · Jatim 14,1% · Jateng 12,1%' : k === 'ptv' ? 'Jabar 17,9% · Jatim 14,8% · Jateng 10,8%' : k === 'blk' ? 'Jatim 84K · Jabar 78K · Jateng 71K kapasitas/th' : 'Jabar 17,9% · DKI 15,7% · Jatim 14,5%'}<br>
                   <strong>💡 Definisi coverage ${data.coverage}%:</strong> dari instansi yang punya jurusan setara, ~${data.coverage}% menyiapkan kompetensi yang aligned dengan standar internasional negara tujuan PMI. Sisanya butuh upgrade kurikulum/equipment/sertifikasi instruktur.
                 </div>
-              </div>` : ''}
+              </div>` : `
+              <div class="mt-3 pt-2 border-t border-gray-100">
+                <div class="bg-orange-50 border border-orange-200 p-2.5 rounded text-[11px] text-gray-700 leading-relaxed">
+                  <strong class="text-orange-800">🚧 Belum ada kurikulum khusus di ${inst}.</strong> Untuk role ini, ${inst} bukan jalur utama — calon PMI biasanya menempuh pelatihan via institusi lain (lihat kartu di atas/bawah dengan status PARTIAL/ALIGNED). <strong class="text-red-800">Implikasi kebijakan:</strong> butuh <em>cross-institution bridging</em> atau pembentukan program baru jika role ini ingin dijadikan jalur formal.
+                </div>
+              </div>`}
           </div>`;
         }).join('')}</div>
       </div>
