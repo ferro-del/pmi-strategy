@@ -149,6 +149,37 @@
   /* Country/family filter */
   .sda-filters { background: white; border-radius: 0.75rem; padding: 1rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 1rem; }
 
+
+  /* ===== TOOLTIP SYSTEM ===== */
+  .tip {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 14px; height: 14px; border-radius: 50%;
+    background: #E5E7EB; color: #6B7280;
+    font-size: 9px; font-weight: 700; font-family: ui-sans-serif, system-ui;
+    margin-left: 4px; cursor: help; user-select: none;
+    vertical-align: 1px; transition: all 0.15s ease;
+    flex-shrink: 0;
+  }
+  .tip:hover, .tip.is-active { background: #8B0000; color: white; transform: scale(1.15); }
+  .tip-popup {
+    position: fixed; z-index: 200; max-width: 320px;
+    background: #1F2937; color: white;
+    padding: 12px 14px; border-radius: 8px;
+    font-size: 0.78rem; line-height: 1.5;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+    pointer-events: none;
+    border-top: 3px solid #F4B400;
+    animation: tipFade 0.12s ease-out;
+  }
+  .tip-popup strong { color: #F4B400; }
+  @keyframes tipFade { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Make table rows clickable visual cue */
+  .deepdive-row { cursor: pointer; transition: background 0.1s; }
+  .deepdive-row:hover { background: #FFF1F1 !important; }
+  .deepdive-row td:first-child { border-left: 3px solid transparent; }
+  .deepdive-row:hover td:first-child { border-left-color: #8B0000; }
+
   /* Coverage bar */
   .coverage-bar { height: 6px; background: #F3F4F6; border-radius: 3px; overflow: hidden; }
 </style>
@@ -173,23 +204,23 @@
   <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
     <div class="stat-card border-t-4 border-red-700">
       <div class="text-2xl md:text-3xl font-bold text-red-800">16</div>
-      <div class="text-xs text-gray-500 mt-1">Negara Tujuan</div>
+      <div class="text-xs text-gray-500 mt-1">Negara Tujuan <span class="tip" data-tip="kpi-countries">i</span></div>
     </div>
     <div class="stat-card border-t-4 border-blue-800">
       <div class="text-2xl md:text-3xl font-bold text-blue-900">6,5 jt</div>
-      <div class="text-xs text-gray-500 mt-1">Demand Global</div>
+      <div class="text-xs text-gray-500 mt-1">Demand Global <span class="tip" data-tip="kpi-demand">i</span></div>
     </div>
     <div class="stat-card border-t-4 border-green-700">
       <div class="text-2xl md:text-3xl font-bold text-green-800">25.642</div>
-      <div class="text-xs text-gray-500 mt-1">Lembaga Vokasi</div>
+      <div class="text-xs text-gray-500 mt-1">Lembaga Vokasi <span class="tip" data-tip="kpi-institutions">i</span></div>
     </div>
     <div class="stat-card border-t-4 border-yellow-600">
       <div class="text-2xl md:text-3xl font-bold text-yellow-700">2,24 jt</div>
-      <div class="text-xs text-gray-500 mt-1">Lulusan/tahun</div>
+      <div class="text-xs text-gray-500 mt-1">Lulusan/tahun <span class="tip" data-tip="kpi-graduates">i</span></div>
     </div>
     <div class="stat-card border-t-4 border-purple-700">
       <div class="text-2xl md:text-3xl font-bold text-purple-800">41,2</div>
-      <div class="text-xs text-gray-500 mt-1">Readiness /100</div>
+      <div class="text-xs text-gray-500 mt-1">Readiness /100 <span class="tip" data-tip="kpi-readiness">i</span></div>
     </div>
   </div>
 </section>
@@ -496,46 +527,46 @@
     <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="pillar-card smk bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('smk')">
         <div class="flex justify-between items-start"><div class="text-3xl">🏫</div><span class="text-xs font-bold text-red-800 bg-red-50 px-2 py-1 rounded">A</span></div>
-        <h3 class="text-lg font-bold text-gray-900 mt-3">SMK</h3>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">SMK <span class="tip" data-tip="pillar-smk">i</span></h3>
         <p class="text-xs text-gray-500">Sekolah Menengah Kejuruan</p>
         <div class="mt-3 space-y-1 text-sm">
-          <div class="flex justify-between"><span class="text-gray-500">Total</span><span class="font-bold">14.442</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Siswa</span><span class="font-bold">5,08 jt</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Lulusan/th</span><span class="font-bold">1,45 jt</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Konsentrasi</span><span class="font-bold">128</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Total <span class="tip" data-tip="smk-total">i</span></span><span class="font-bold">14.442</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Siswa <span class="tip" data-tip="smk-students">i</span></span><span class="font-bold">5,08 jt</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Lulusan/th <span class="tip" data-tip="smk-graduates">i</span></span><span class="font-bold">1,45 jt</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Konsentrasi <span class="tip" data-tip="smk-konsentrasi">i</span></span><span class="font-bold">128</span></div>
         </div>
       </div>
       <div class="pillar-card ptv bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('ptv')">
         <div class="flex justify-between items-start"><div class="text-3xl">🎓</div><span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-1 rounded">B</span></div>
-        <h3 class="text-lg font-bold text-gray-900 mt-3">PT Vokasi</h3>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">PT Vokasi <span class="tip" data-tip="pillar-ptv">i</span></h3>
         <p class="text-xs text-gray-500">Politeknik & Akademi</p>
         <div class="mt-3 space-y-1 text-sm">
-          <div class="flex justify-between"><span class="text-gray-500">Total</span><span class="font-bold">266</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Mahasiswa</span><span class="font-bold">904K</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Lulusan/th</span><span class="font-bold">218K</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Prodi</span><span class="font-bold">287</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Total <span class="tip" data-tip="ptv-total">i</span></span><span class="font-bold">266</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Mahasiswa <span class="tip" data-tip="ptv-students">i</span></span><span class="font-bold">904K</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Lulusan/th <span class="tip" data-tip="ptv-graduates">i</span></span><span class="font-bold">218K</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Prodi <span class="tip" data-tip="ptv-prodi">i</span></span><span class="font-bold">287</span></div>
         </div>
       </div>
       <div class="pillar-card blk bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('blk')">
         <div class="flex justify-between items-start"><div class="text-3xl">🛠️</div><span class="text-xs font-bold text-green-800 bg-green-50 px-2 py-1 rounded">C</span></div>
-        <h3 class="text-lg font-bold text-gray-900 mt-3">BLK / LPK</h3>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">BLK / LPK <span class="tip" data-tip="pillar-blk">i</span></h3>
         <p class="text-xs text-gray-500">Balai Latihan Kerja</p>
         <div class="mt-3 space-y-1 text-sm">
-          <div class="flex justify-between"><span class="text-gray-500">BLK Pemerintah</span><span class="font-bold">303</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">BLKK</span><span class="font-bold">4.800</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">LPK Swasta</span><span class="font-bold">17.850</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Kapasitas/th</span><span class="font-bold">615K</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">BLK Pemerintah <span class="tip" data-tip="blk-pemerintah">i</span></span><span class="font-bold">303</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">BLKK <span class="tip" data-tip="blk-blkk">i</span></span><span class="font-bold">4.800</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">LPK Swasta <span class="tip" data-tip="blk-swasta">i</span></span><span class="font-bold">17.850</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Kapasitas/th <span class="tip" data-tip="blk-capacity">i</span></span><span class="font-bold">615K</span></div>
         </div>
       </div>
       <div class="pillar-card lsp bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('lsp')">
         <div class="flex justify-between items-start"><div class="text-3xl">📜</div><span class="text-xs font-bold text-yellow-700 bg-yellow-50 px-2 py-1 rounded">D</span></div>
-        <h3 class="text-lg font-bold text-gray-900 mt-3">LSP / BNSP</h3>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">LSP / BNSP <span class="tip" data-tip="pillar-lsp">i</span></h3>
         <p class="text-xs text-gray-500">Sertifikasi Profesi</p>
         <div class="mt-3 space-y-1 text-sm">
-          <div class="flex justify-between"><span class="text-gray-500">Total LSP</span><span class="font-bold">1.981</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Skema</span><span class="font-bold">4.280</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">Asesi 2024</span><span class="font-bold">1,37 jt</span></div>
-          <div class="flex justify-between"><span class="text-gray-500">+YoY</span><span class="font-bold text-green-700">+11,5%</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Total LSP <span class="tip" data-tip="lsp-total">i</span></span><span class="font-bold">1.981</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Skema <span class="tip" data-tip="lsp-skema">i</span></span><span class="font-bold">4.280</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Asesi 2024 <span class="tip" data-tip="lsp-asesi">i</span></span><span class="font-bold">1,37 jt</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">+YoY <span class="tip" data-tip="lsp-yoy">i</span></span><span class="font-bold text-green-700">+11,5%</span></div>
         </div>
       </div>
     </div>
@@ -553,9 +584,9 @@
           <thead class="bg-red-800 text-white">
             <tr>
               <th class="px-4 py-3 text-left">Job Family</th>
-              <th class="px-4 py-3 text-right">Demand PMI</th>
-              <th class="px-4 py-3 text-right">Supply</th>
-              <th class="px-4 py-3 text-right">Cert</th>
+              <th class="px-4 py-3 text-right">Demand PMI <span class="tip" data-tip="gap-demand">i</span></th>
+              <th class="px-4 py-3 text-right">Supply <span class="tip" data-tip="gap-supply">i</span></th>
+              <th class="px-4 py-3 text-right">Cert <span class="tip" data-tip="gap-cert">i</span></th>
               <th class="px-4 py-3 text-left">Status</th>
               <th class="px-4 py-3 text-left">Catatan</th>
             </tr>
@@ -576,7 +607,7 @@
     <!-- ============== CAPACITY ANALYSIS ============== -->
     <div class="mt-12 mb-6">
       <p class="section-eyebrow">Capacity Analysis</p>
-      <h3 class="text-xl font-bold text-gray-900 mt-1">Utilisasi & throughput per pilar</h3>
+      <h3 class="text-xl font-bold text-gray-900 mt-1">Utilisasi & throughput per pilar <span class="tip" data-tip="cap-bar">i</span></h3>
       <p class="text-sm text-gray-600 mt-1">Berapa banyak kapasitas total · berapa yang teralokasi PMI · gap utilisasi:</p>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
@@ -589,7 +620,7 @@
     <!-- ============== GEO ANALYSIS ============== -->
     <div class="mt-10 mb-6">
       <p class="section-eyebrow">Geographic Analysis</p>
-      <h3 class="text-xl font-bold text-gray-900 mt-1">Mismatch: Provinsi Asal PMI vs Provinsi Kapasitas Vokasi</h3>
+      <h3 class="text-xl font-bold text-gray-900 mt-1">Mismatch: Provinsi Asal PMI vs Provinsi Kapasitas Vokasi <span class="tip" data-tip="geo-status">i</span></h3>
       <p class="text-sm text-gray-600 mt-1">PMI banyak direkrut dari NTT/NTB/Sulawesi tapi kapasitas vokasi 51% di Jawa. Heatmap ini tunjukkan provinsi mana yang bottleneck:</p>
     </div>
     <div class="bg-white rounded-xl shadow-sm p-6 mb-8">
@@ -610,8 +641,8 @@
       <div class="border border-gray-200 rounded-lg overflow-hidden">
         <div class="bg-gray-50 grid geo-row font-bold text-xs uppercase text-gray-700" style="border-bottom: 2px solid #E5E7EB;">
           <div>Provinsi</div>
-          <div>Pengirim PMI</div>
-          <div>Kapasitas Vokasi</div>
+          <div>Pengirim PMI <span class="tip" data-tip="geo-pmi">i</span></div>
+          <div>Kapasitas Vokasi <span class="tip" data-tip="geo-cap">i</span></div>
           <div class="text-center">Status</div>
         </div>
         <div id="geoRows" class="px-4"></div>
@@ -708,9 +739,9 @@
               <th style="min-width: 180px;">Negara → Family</th>
               <th style="min-width: 200px;">Job Role</th>
               <th style="min-width: 220px;">Kompetensi & Sertifikasi</th>
-              <th style="min-width: 110px; text-align: center;">SMK<br><span class="text-[10px] opacity-80">Siap / Total</span></th>
-              <th style="min-width: 110px; text-align: center;">PT Vokasi<br><span class="text-[10px] opacity-80">Siap / Total</span></th>
-              <th style="min-width: 110px; text-align: center;">BLK / LPK<br><span class="text-[10px] opacity-80">Siap / Total</span></th>
+              <th style="min-width: 110px; text-align: center;">SMK <span class="tip" data-tip="matrix-ready">i</span><br><span class="text-[10px] opacity-80">Siap / Total</span></th>
+              <th style="min-width: 110px; text-align: center;">PT Vokasi <span class="tip" data-tip="matrix-ready">i</span><br><span class="text-[10px] opacity-80">Siap / Total</span></th>
+              <th style="min-width: 110px; text-align: center;">BLK / LPK <span class="tip" data-tip="matrix-ready">i</span><br><span class="text-[10px] opacity-80">Siap / Total</span></th>
               <th style="min-width: 90px; text-align: right;">Demand/th</th>
             </tr>
           </thead>
@@ -737,7 +768,7 @@
       <button class="sda-inst-pill px-3 py-1.5 rounded-full text-xs border border-gray-300 bg-white" data-inst="ptv">PT Vokasi</button>
       <button class="sda-inst-pill px-3 py-1.5 rounded-full text-xs border border-gray-300 bg-white" data-inst="blk">BLK / LPK</button>
       <div class="ml-auto flex items-center gap-3 text-xs">
-        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" style="background:#2E7D32"></span>Surplus</span>
+        <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" style="background:#2E7D32"></span>Surplus <span class="tip" data-tip="bubble-color">i</span></span>
         <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" style="background:#F4B400"></span>Pas</span>
         <span class="flex items-center gap-1"><span class="inline-block w-3 h-3 rounded-full" style="background:#C62828"></span>Defisit</span>
       </div>
@@ -838,22 +869,22 @@
     <!-- Coverage KPIs -->
     <div class="grid md:grid-cols-4 gap-4 mb-6">
       <div class="bg-white rounded-xl shadow-sm p-4">
-        <p class="text-xs uppercase font-bold text-gray-500">SMK Coverage</p>
+        <p class="text-xs uppercase font-bold text-gray-500">SMK Coverage <span class="tip" data-tip="coverage-pct">i</span></p>
         <div class="text-2xl font-bold text-red-800 mt-1">51,5%</div>
         <div class="coverage-bar mt-2"><div style="width: 51.5%; height: 100%; background: #8B0000;"></div></div>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4">
-        <p class="text-xs uppercase font-bold text-gray-500">PT Vokasi Coverage</p>
+        <p class="text-xs uppercase font-bold text-gray-500">PT Vokasi Coverage <span class="tip" data-tip="coverage-pct">i</span></p>
         <div class="text-2xl font-bold text-blue-900 mt-1">60,4%</div>
         <div class="coverage-bar mt-2"><div style="width: 60.4%; height: 100%; background: #1E3A5F;"></div></div>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4">
-        <p class="text-xs uppercase font-bold text-gray-500">BLK Coverage</p>
+        <p class="text-xs uppercase font-bold text-gray-500">BLK Coverage <span class="tip" data-tip="coverage-pct">i</span></p>
         <div class="text-2xl font-bold text-green-800 mt-1">65,4%</div>
         <div class="coverage-bar mt-2"><div style="width: 65.4%; height: 100%; background: #2E7D32;"></div></div>
       </div>
       <div class="bg-white rounded-xl shadow-sm p-4">
-        <p class="text-xs uppercase font-bold text-gray-500">LSP Coverage</p>
+        <p class="text-xs uppercase font-bold text-gray-500">LSP Coverage <span class="tip" data-tip="coverage-pct">i</span></p>
         <div class="text-2xl font-bold text-yellow-700 mt-1">67,0%</div>
         <div class="coverage-bar mt-2"><div style="width: 67%; height: 100%; background: #F4B400;"></div></div>
       </div>
@@ -876,9 +907,9 @@
     <!-- Legend -->
     <div class="flex items-center gap-3 flex-wrap text-sm mb-4">
       <span class="text-xs uppercase font-bold text-gray-500">Legend:</span>
-      <span class="status-aligned px-3 py-1 rounded-full text-xs font-semibold">✓ ALIGNED</span>
-      <span class="status-partial px-3 py-1 rounded-full text-xs font-semibold">⚠ PARTIAL</span>
-      <span class="status-missing px-3 py-1 rounded-full text-xs font-semibold">✗ MISSING</span>
+      <span class="status-aligned px-3 py-1 rounded-full text-xs font-semibold">✓ ALIGNED</span> <span class="tip" data-tip="status-aligned">i</span>
+      <span class="status-partial px-3 py-1 rounded-full text-xs font-semibold">⚠ PARTIAL</span> <span class="tip" data-tip="status-partial">i</span>
+      <span class="status-missing px-3 py-1 rounded-full text-xs font-semibold">✗ MISSING</span> <span class="tip" data-tip="status-missing">i</span>
     </div>
 
     <!-- Matrix -->
@@ -2226,6 +2257,126 @@ function switchTab(name) {
 document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
 
 
+// ============================================================
+// TOOLTIP SYSTEM
+// ============================================================
+const TOOLTIPS = {
+  // Hero KPI strip
+  'kpi-countries': '<strong>16 negara tujuan strategis PMI</strong> dipetakan di Report A. Asia Timur (JP/KR/TW/HK), Asia Tenggara (SG), Oseania (AU), Eropa (DE/IT/NL), GCC (SA/AE/QA/BH/KW), Amerika Utara (CA), plus Turki. Sumber: BP2MI Penempatan PMI 2024.',
+  'kpi-demand': '<strong>6,5 juta posisi</strong> = aggregate demand global skilled vocational worker non-domestic dari 16 country deep dives × 8 job families. Sumber: Report B kompilasi dari ministry data per negara.',
+  'kpi-institutions': '<strong>25.642 lembaga vokasi</strong> total = 14.442 SMK + 266 PT Vokasi + 22.953 BLK/LPK (303 pemerintah + 4.800 BLKK + 17.850 swasta). Sumber: Pusdatin Kemendikbud, PDDikti, Kemnaker (data 2024).',
+  'kpi-graduates': '<strong>2,24 juta lulusan/tahun</strong> = 1,45jt SMK + 218K PT Vokasi + 558K BLK lulusan PMI-relevant. Catatan: hanya 16,3% siap-deploy ke pasar internasional tanpa bridging program.',
+  'kpi-readiness': '<strong>Readiness Index 41,2/100</strong> (skor C+). Komposisi: Infrastruktur 75 (BAIK), Kurikulum 27 (LEMAH), Bahasa 8 (KRITIS), Sertifikasi 24,5 (LEMAH), MRA/Akreditasi 12 (KRITIS). Method: weighted average of 5 sub-scores.',
+
+  // Status badges (Curriculum tab)
+  'status-aligned': '<strong>ALIGNED</strong> (70-100% coverage): konsentrasi/jurusan/skema sudah ada DAN sesuai standar internasional negara tujuan. Lulusan dapat di-deploy dengan finishing minor (≤3 bulan).',
+  'status-partial': '<strong>PARTIAL</strong> (40-69% coverage): sudah ada tapi belum sesuai. Lulusan butuh bridging program 3-12 bulan. Perlu upgrade kurikulum, equipment, atau sertifikasi instruktur.',
+  'status-missing': '<strong>MISSING</strong> (0-39% coverage): belum ada di institusi yang relevan. Perlu dibangun dari nol via Kepmen baru, kurikulum baru, atau program rintisan.',
+  'coverage-pct': '<strong>Coverage %</strong> = persentase instansi yang punya jurusan setara DAN menyiapkan kompetensi yang aligned dengan standar internasional. Threshold: ≥70% aligned, 40-69% partial, <40% missing.',
+
+  // Pillar cards (Supply tab)
+  'pillar-smk': '<strong>SMK (Sekolah Menengah Kejuruan)</strong>: pendidikan vokasi 3 tahun usia 15-18 thn. Kurikulum berbasis Kepmendikbudristek 244/M/2024 dengan 10 bidang keahlian, 50 program, 128 konsentrasi keahlian.',
+  'pillar-ptv': '<strong>PT Vokasi</strong>: pendidikan vokasi tinggi D1-D4. 44 Politeknik Negeri + 5 Akademi Komunitas + 217 politeknik swasta. 287 program studi terdaftar di PDDikti.',
+  'pillar-blk': '<strong>BLK / LPK</strong>: Balai Latihan Kerja (303 pemerintah pusat/daerah) + BLK Komunitas (4.800, target 5K akhir 2025) + LPK swasta (17.850 terdaftar). Kemnaker dengan standar SKKNI.',
+  'pillar-lsp': '<strong>LSP (Lembaga Sertifikasi Profesi)</strong>: 1.981 LSP total — P1 (institusi pendidikan), P2 (kementerian/lembaga), P3 (asosiasi industri). Dibawah BNSP dengan 4.280 skema sertifikasi berbasis SKKNI.',
+  'smk-total': '<strong>14.442 SMK</strong> total = 3.775 negeri (26%) + 10.667 swasta (74%). Ditingkatkan dengan program SMK Pusat Keunggulan untuk 2.000 SMK pilihan.',
+  'smk-students': '<strong>5,08 juta siswa aktif</strong> SMK kelas X-XII. Negeri 2,44jt + Swasta 2,64jt. Rata-rata 350 siswa per SMK.',
+  'smk-graduates': '<strong>1,45 juta lulusan/tahun</strong> = ~28,5% dari populasi siswa aktif. Dari ini, ~85% bekerja, ~9% lanjut kuliah, ~5% wirausaha (BPS Sakernas tracer study).',
+  'smk-konsentrasi': '<strong>128 konsentrasi keahlian</strong> SMK per Kepmen 244/2024 — pecahan dari 50 program × 10 bidang keahlian. Sebelumnya 142 paket keahlian (kurikulum lama).',
+  'ptv-total': '<strong>266 PT Vokasi</strong> = 44 Politeknik Negeri + 5 Akademi Komunitas + 217 politeknik swasta. Distribusi 8 rumpun ilmu utama.',
+  'ptv-students': '<strong>904.000 mahasiswa aktif</strong> D1-D4 di PT Vokasi. Pertumbuhan +5,8% YoY (2023→2024).',
+  'ptv-graduates': '<strong>218.000 lulusan/tahun</strong>. Berdasarkan BPS Sakernas 2023, 31,4% bekerja sebelum lulus; 92,8% bekerja dalam 6 bulan pasca-lulus.',
+  'ptv-prodi': '<strong>287 program studi vokasi</strong> aktif di PDDikti — D1, D2, D3, D4 / Sarjana Terapan.',
+  'blk-pemerintah': '<strong>303 BLK Pemerintah</strong> = 17 UPTP (pusat) + 286 UPTD (daerah). UPTP dikelola Kemnaker langsung.',
+  'blk-blkk': '<strong>4.800 BLK Komunitas (BLKK)</strong> = bantuan Kemnaker sejak 2017 ke pesantren, lembaga keagamaan, organisasi masyarakat. Target 5.000 akhir 2025.',
+  'blk-swasta': '<strong>17.850 LPK swasta</strong> terdaftar. Hanya 1.287 (7,2%) terakreditasi BP2MI untuk PMI placement.',
+  'blk-capacity': '<strong>615.000 peserta/tahun</strong> kapasitas total BLK+BLKK+LPK. Lulusan ~91% completion rate (program singkat 1-6 bulan).',
+  'lsp-total': '<strong>1.981 LSP</strong> total dibawah BNSP. Tumbuh +12% YoY dari 1.769 (2023).',
+  'lsp-skema': '<strong>4.280 skema sertifikasi</strong> aktif berbasis SKKNI. Hanya 89 skema (~2%) PMI-specific.',
+  'lsp-asesi': '<strong>1,37 juta asesi tersertifikasi 2024</strong>, +14% YoY. PMI-specific: 89.174 asesi (6,5% dari total).',
+  'lsp-yoy': '<strong>+11,5% YoY</strong> pertumbuhan asesi BNSP 2023→2024. Akselerasi dipicu kebutuhan industri 4.0 + skill recognition.',
+
+  // Gap table (Supply tab)
+  'gap-demand': '<strong>Demand PMI per family</strong> (target 2029) = perkiraan kebutuhan tenaga kerja Indonesia per family job dari 16 negara, untuk mencapai target deployment 480K PMI/tahun di 2029.',
+  'gap-supply': '<strong>Supply lulusan vokasi PMI-relevant</strong> = lulusan yang JURUSANNYA RELEVAN dengan family job tersebut. Catatan: lulusan ≠ siap-deploy. Hanya 16,3% rata-rata siap setelah bridging.',
+  'gap-cert': '<strong>LSP Cert</strong> = asesi BNSP per tahun yang sudah dapat sertifikat di skema relevant. Lebih kritis dari sekadar lulusan karena bridge ke recognition di destinasi.',
+
+  // Bubble chart (SDA tab)
+  'bubble-x': '<strong>Sumbu X</strong>: PMI dikirim per provinsi dalam ribuan/tahun. Sumber: BP2MI 2024 origin province registry.',
+  'bubble-y': '<strong>Sumbu Y</strong>: kapasitas lulusan vokasi PMI-relevant dalam ribuan/tahun. Dihitung: SMK count × 28,5% lulusan rate, atau PTV count × 820 avg, atau BLK count × 1500 peserta.',
+  'bubble-size': '<strong>Ukuran bubble</strong>: magnitude gap = abs(capacity - demand×5). Bubble besar = mismatch besar (defisit atau surplus).',
+  'bubble-color': '<strong>Warna</strong>: 🟢 Surplus (capacity > 1,5× demand pipeline) · 🟡 Pas (-30% < gap < +50%) · 🔴 Defisit (capacity < 0,5× demand pipeline).',
+
+  // Geo Analysis
+  'geo-pmi': '<strong>Pengiriman PMI per provinsi/tahun</strong>. Sumber: BP2MI 2024 origin province registry. Total 297.434 PMI dikirim 2024 dari ~38 provinsi.',
+  'geo-cap': '<strong>Kapasitas vokasi per provinsi</strong>: jumlah SMK + BLK + share PT Vokasi. Sumber: Pusdatin Kemendikbud + Kemnaker per provinsi.',
+  'geo-status': '<strong>Status mismatch</strong>: dihitung dari capacity × 1000 / pmi_K. Critical < 50, Mismatch 50-100, Aligned > 100.',
+
+  // Capacity bars
+  'cap-bar': 'Bar abu-abu = total throughput tahunan pilar. Bar berwarna = porsi yang relevan untuk job role PMI. Persentase = utilization rate untuk PMI vs total throughput.',
+
+  // Matrix headers
+  'matrix-ready': '<strong>Siap</strong> = jumlah instansi yang sudah menyiapkan kompetensi sesuai standar internasional. Estimasi: total instansi × coverage% dari Report D mapping.',
+  'matrix-belum': '<strong>Belum siap</strong> = punya jurusan terkait tapi belum sesuai standar. Butuh upgrade kurikulum, sertifikasi instruktur, equipment, atau bridging.',
+  'matrix-total': '<strong>Total</strong> = estimasi instansi di Indonesia yang punya jurusan/kejuruan/skema setara. Dihitung dari student enrollment / avg cohort size 350 siswa.',
+
+  // Readiness components
+  'readiness-infra': '<strong>Infrastruktur 75/100</strong>: jumlah lembaga, gedung, kapasitas. 25.642 lembaga total = sufficient secara volume. Kekurangan utama: distribusi geografis (51% di Jawa).',
+  'readiness-curr': '<strong>Kurikulum 27/100</strong>: alignment dengan demand internasional. Mismatch 73%. Gap utama: SMK belum di-redesign untuk standar internasional pasca-Kepmen 244/2024.',
+  'readiness-lang': '<strong>Bahasa 8/100</strong>: hanya 8% lulusan punya kemampuan bahasa target (JLPT/EPS-TOPIK/B1 Jerman/IELTS 5.0). KRITIS — bottleneck terbesar untuk semua destinasi.',
+  'readiness-cert': '<strong>Sertifikasi 24,5/100</strong>: BNSP cuma 6,5% PMI-specific dari ekosistem. Skema BNSP umumnya tidak diakui di destinasi tanpa MRA.',
+  'readiness-mra': '<strong>MRA 12/100</strong>: hanya beberapa skema BNSP (Caregiver Jepang G2G, Nurse Bridging Program Jerman, Welder Saudi) yang punya recognition di destinasi.',
+
+  // Throughput cards (Curriculum modal)
+  'throughput-students': '<strong>Total siswa/mahasiswa aktif/tahun</strong> dalam program/jurusan tersebut. Sumber: Pusdatin Kemendikbud (SMK), PDDikti (PTV), Kemnaker (BLK).',
+  'throughput-graduates': '<strong>Lulusan/asesi/tahun</strong>. SMK ~28,5% completion (1,45jt dari 5jt siswa). PTV ~25%. BLK ~91% completion (program singkat 1-6 bulan).',
+  'throughput-location': 'Distribusi geografis lembaga yang relevan. Detail per provinsi tersedia di Report C Bab 2-5.',
+};
+
+function showTip(el, text) {
+  hideTip();
+  const popup = document.createElement('div');
+  popup.className = 'tip-popup';
+  popup.innerHTML = text;
+  document.body.appendChild(popup);
+  const r = el.getBoundingClientRect();
+  const popupW = Math.min(320, popup.offsetWidth);
+  const left = Math.max(8, Math.min(window.innerWidth - popupW - 8, r.left + r.width/2 - popupW/2));
+  const top = r.bottom + 8;
+  popup.style.left = left + 'px';
+  popup.style.top = (top + window.scrollY > window.innerHeight + window.scrollY - 200 ? r.top - popup.offsetHeight - 8 : top) + 'px';
+  el.classList.add('is-active');
+}
+function hideTip() {
+  document.querySelectorAll('.tip-popup').forEach(p => p.remove());
+  document.querySelectorAll('.tip.is-active').forEach(p => p.classList.remove('is-active'));
+}
+function setupTooltips() {
+  document.body.addEventListener('mouseover', e => {
+    const tip = e.target.closest('.tip');
+    if (!tip) return;
+    const key = tip.dataset.tip;
+    const text = TOOLTIPS[key] || tip.dataset.tipText;
+    if (text) showTip(tip, text);
+  });
+  document.body.addEventListener('mouseout', e => {
+    const tip = e.target.closest('.tip');
+    if (tip) setTimeout(hideTip, 80);
+  });
+  document.body.addEventListener('click', e => {
+    const tip = e.target.closest('.tip');
+    if (tip) {
+      e.stopPropagation();
+      const key = tip.dataset.tip;
+      const text = TOOLTIPS[key] || tip.dataset.tipText;
+      if (text) showTip(tip, text);
+    } else {
+      hideTip();
+    }
+  });
+  window.addEventListener('scroll', hideTip);
+}
+
 // Cross-tab navigation with context
 window.gotoTab = function(tab, opts = {}) {
   closeModal();
@@ -2437,6 +2588,7 @@ function renderDD(code) {
       </div>
     </div>
 
+    <p class="text-xs text-gray-500 italic mb-2">💡 <strong>Klik baris</strong> untuk lihat learning path target & mapping throughput per job role di negara ini</p>
     <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
       <div class="overflow-x-auto"><table class="w-full text-sm">
         <thead class="bg-red-800 text-white"><tr>
@@ -2448,10 +2600,10 @@ function renderDD(code) {
           <th class="px-3 py-2 text-right">ID Share</th>
           <th class="px-3 py-2 text-left">Top Source</th>
         </tr></thead>
-        <tbody class="divide-y divide-gray-100">${c.demand.map(d => `
-          <tr class="hover:bg-red-50">
+        <tbody class="divide-y divide-gray-100">${c.demand.map((d, idx) => `
+          <tr class="deepdive-row" onclick="showJobRoleAtCountry('${c.code}', ${idx})" title="Klik untuk lihat learning path & mapping throughput">
             <td class="px-3 py-2 font-semibold text-xs">${d.family}</td>
-            <td class="px-3 py-2 text-xs">${d.role}</td>
+            <td class="px-3 py-2 text-xs">${d.role} <span class="text-[10px] text-red-700 font-semibold">▸</span></td>
             <td class="px-3 py-2 text-right font-mono text-red-800 text-xs">${d.demand.toLocaleString('id-ID')}</td>
             <td class="px-3 py-2 text-right font-mono text-green-800 text-xs">${d.fulfilled.toLocaleString('id-ID')}</td>
             <td class="px-3 py-2 text-right font-mono text-orange-700 text-xs">${d.gap.toLocaleString('id-ID')}</td>
@@ -2629,14 +2781,14 @@ document.getElementById('supplyDestGrid').innerHTML = SUPPLY.gap.perDestination.
 // Readiness bars
 const ri = SUPPLY.gap.answerToMainQuestion.readinessIndex;
 const bars = [
-  { label: 'Infrastruktur', value: ri.infrastruktur, color: '#2E7D32' },
-  { label: 'Kurikulum', value: ri.kurikulum, color: '#E65100' },
-  { label: 'Bahasa target negara', value: ri.bahasa, color: '#C62828' },
-  { label: 'Sertifikasi', value: ri.sertifikasi, color: '#E65100' },
-  { label: 'MRA / Akreditasi internasional', value: ri.akreditasi_internasional, color: '#C62828' }
+  { label: 'Infrastruktur', value: ri.infrastruktur, color: '#2E7D32', tip: 'readiness-infra' },
+  { label: 'Kurikulum', value: ri.kurikulum, color: '#E65100', tip: 'readiness-curr' },
+  { label: 'Bahasa target negara', value: ri.bahasa, color: '#C62828', tip: 'readiness-lang' },
+  { label: 'Sertifikasi', value: ri.sertifikasi, color: '#E65100', tip: 'readiness-cert' },
+  { label: 'MRA / Akreditasi internasional', value: ri.akreditasi_internasional, color: '#C62828', tip: 'readiness-mra' }
 ];
 document.getElementById('readinessBars').innerHTML = bars.map(b => `
-  <div><div class="flex justify-between text-sm mb-1"><span class="text-gray-700">${b.label}</span>
+  <div><div class="flex justify-between text-sm mb-1"><span class="text-gray-700">${b.label} <span class="tip" data-tip="${b.tip}">i</span></span>
     <span class="font-mono font-semibold" style="color: ${b.color}">${b.value}/100</span></div>
   <div class="index-bar"><div class="index-fill" style="width: ${b.value}%; background: ${b.color}"></div></div></div>
 `).join('');
@@ -2706,6 +2858,149 @@ if (geoContainer) {
 }
 
 
+
+// ============================================================
+// SHOW JOB ROLE AT COUNTRY — combines Report B (demand) with Report D (curriculum)
+// ============================================================
+function findCurriculumMatch(family, roleText, countryName) {
+  const candidates = CURRICULUM.jobRoles.filter(r => r.family === family);
+  if (!candidates.length) return null;
+  // Score by word overlap
+  const dwords = roleText.toLowerCase().match(/\w+/g) || [];
+  let best = null, bestScore = 0;
+  for (const r of candidates) {
+    const rwords = r.role.toLowerCase().match(/\w+/g) || [];
+    let score = 0;
+    for (const w of dwords) if (w.length > 3 && rwords.includes(w)) score += 1;
+    // Bonus if destination matches
+    if (r.destinations.some(d => d.toLowerCase().includes(countryName.toLowerCase().split(' ')[0]) || countryName.toLowerCase().includes(d.toLowerCase().split(' ')[0]))) score += 0.5;
+    if (score > bestScore) { bestScore = score; best = r; }
+  }
+  return bestScore > 0 ? best : (candidates[0] || null);
+}
+
+function showJobRoleAtCountry(countryCode, demandIdx) {
+  const c = dataB.find(x => x.code === countryCode);
+  if (!c) return;
+  const d = c.demand[demandIdx];
+  if (!d) return;
+  const match = findCurriculumMatch(d.family, d.role, c.name);
+
+  // Build country-specific demand context
+  const fulfillRate = d.demand > 0 ? Math.round(d.fulfilled / d.demand * 100) : 0;
+  const isIDLow = d.indonesianShare.includes('<') || parseInt(d.indonesianShare) < 5;
+
+  let lpHTML = '';
+  let mapHTML = '';
+  if (match) {
+    const lp = match.learningPath;
+    const m = match.mapping;
+    lpHTML = `
+      <div>
+        <p class="text-xs uppercase font-bold text-red-800 mb-2">📚 D1 — Learning Path Target untuk ${c.name}</p>
+        <div class="bg-red-50 p-4 rounded-lg space-y-3 text-sm">
+          <div><p class="font-semibold text-gray-900 text-xs uppercase">Core Skills (${lp.coreSkills.length})</p>
+            <ul class="mt-1 space-y-0.5 text-xs">${lp.coreSkills.map(s => `<li>· ${s}</li>`).join('')}</ul></div>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-red-200">
+            <div><p class="font-semibold text-xs uppercase text-gray-700">Bahasa Target</p><p class="text-xs">${lp.language}</p></div>
+            <div><p class="font-semibold text-xs uppercase text-gray-700">Durasi</p><p class="text-xs">${lp.durationMonths} bln · ${lp.prakerinHours} jam prakerin</p></div>
+          </div>
+          <div class="pt-2 border-t border-red-200">
+            <p class="font-semibold text-xs uppercase text-gray-700">Sertifikasi Target untuk ${c.name}</p>
+            <ul class="mt-1 space-y-0.5 text-xs">${lp.certifications.map(cert => `<li>· ${cert}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>
+    `;
+
+    // Throughput cross-ref (same as in showCurriculumDetail)
+    const throughputLookup = (k, mappingName) => {
+      if (!mappingName || mappingName === '—') return null;
+      if (k === 'smk') {
+        const found = SUPPLY.smk.topPrograms.find(p => mappingName.toLowerCase().includes(p.name.toLowerCase().split(' ')[0]) || p.name.toLowerCase().includes(mappingName.toLowerCase().split(' (')[0].split(' ')[0]));
+        if (found) return { schools: 'across ~14.442 SMK', students: found.students, lulusan: found.lulusan, growth: found.growth };
+        return { schools: 'distribusi tersebar', students: null, lulusan: null };
+      }
+      if (k === 'ptv') return { schools: '266 PT Vokasi', students: '~904K total D1-D4', lulusan: '218K/th total' };
+      if (k === 'blk') {
+        const found = SUPPLY.blk.kejuruanUtama.find(kej => mappingName.toLowerCase().includes(kej.name.toLowerCase().split(' ')[0]));
+        if (found) return { schools: '303 BLK + 4.800 BLKK + 17.850 LPK', students: found.peserta, lulusan: found.lulusan };
+        return { schools: 'jaringan 22.953 lembaga', students: null, lulusan: null };
+      }
+      if (k === 'lsp') {
+        const found = SUPPLY.lsp.sektorSkema.find(s => mappingName.toLowerCase().includes(s.name.toLowerCase().split(' ')[0]) || s.name.toLowerCase().includes('PMI'));
+        if (found) return { schools: `${found.count} skema BNSP`, students: null, lulusan: found.asesi, growth: found.growth };
+        return { schools: '4.280 skema BNSP', students: null, lulusan: null };
+      }
+    };
+
+    mapHTML = `
+      <div>
+        <p class="text-xs uppercase font-bold text-red-800 mb-2">📊 D2 — Mapping & Throughput</p>
+        <div class="space-y-2">${['smk','ptv','blk','lsp'].map(k => {
+          const inst = { smk: 'SMK', ptv: 'PT Vokasi', blk: 'BLK / LPK', lsp: 'LSP / BNSP' }[k];
+          const data = m[k];
+          const fieldName = { smk: 'konsentrasi', ptv: 'jurusan', blk: 'kejuruan', lsp: 'skema' }[k];
+          const tp = throughputLookup(k, data[fieldName]);
+          return `<div class="border border-gray-200 rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-gray-900 text-sm">${inst}</span>
+              <span class="status-${data.status} text-xs px-2 py-0.5 rounded-full font-semibold">${statusInd[data.status]} ${statusText[data.status]}</span>
+            </div>
+            <p class="text-xs text-gray-700"><strong>Mapping:</strong> ${data[fieldName] || '—'}</p>
+            <div class="mt-2 flex items-center gap-2">
+              <div class="coverage-bar flex-1"><div style="width: ${data.coverage}%; height:100%; background: ${data.status==='aligned'?'#2E7D32':data.status==='partial'?'#E65100':'#C62828'};"></div></div>
+              <span class="text-xs font-mono">${data.coverage}%</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-2 italic">${data.gap}</p>
+            ${tp && data.status !== 'missing' ? `
+              <div class="grid grid-cols-3 gap-1 mt-3 pt-2 border-t border-gray-100">
+                <div class="throughput-card"><div class="label">Lokasi</div><div class="text-xs font-medium text-gray-800 mt-1">${tp.schools}</div></div>
+                ${tp.students !== null && typeof tp.students === 'number' ? `<div class="throughput-card"><div class="label">Siswa</div><div class="num">${(tp.students/1000).toFixed(0)}K</div></div>` : `<div class="throughput-card"><div class="label">Siswa</div><div class="text-xs">${tp.students || '—'}</div></div>`}
+                ${tp.lulusan !== null && typeof tp.lulusan === 'number' ? `<div class="throughput-card"><div class="label">Throughput/th</div><div class="num">${(tp.lulusan/1000).toFixed(1)}K</div></div>` : `<div class="throughput-card"><div class="label">Throughput</div><div class="text-xs">${tp.lulusan || '—'}</div></div>`}
+              </div>` : ''}
+          </div>`;
+        }).join('')}</div>
+      </div>
+    `;
+  } else {
+    lpHTML = `<div class="bg-yellow-50 p-4 rounded-lg"><p class="text-sm">Job role specific learning path tidak tersedia di Report D mapping.</p></div>`;
+    mapHTML = '';
+  }
+
+  const body = `
+    <!-- Country-specific demand context -->
+    <div class="bg-blue-50 border-l-4 border-blue-600 p-4 rounded-r-lg mb-5">
+      <p class="text-xs uppercase font-bold text-blue-800">Demand Context · ${c.flag} ${c.name}</p>
+      <div class="grid md:grid-cols-4 gap-3 mt-3 text-sm">
+        <div><div class="text-xs text-gray-500">Demand/th</div><div class="font-bold text-red-800">${d.demand.toLocaleString('id-ID')}</div></div>
+        <div><div class="text-xs text-gray-500">Fulfilled</div><div class="font-bold text-green-700">${d.fulfilled.toLocaleString('id-ID')} <span class="text-[10px] font-normal">(${fulfillRate}%)</span></div></div>
+        <div><div class="text-xs text-gray-500">Gap</div><div class="font-bold text-orange-700">${d.gap.toLocaleString('id-ID')}</div></div>
+        <div><div class="text-xs text-gray-500">ID Share</div><div class="font-bold ${isIDLow ? 'text-red-700' : 'text-green-700'}">${d.indonesianShare}</div></div>
+      </div>
+      <div class="mt-3 grid md:grid-cols-2 gap-2 text-xs">
+        <div class="bg-white p-2 rounded border border-blue-200"><strong>Persyaratan:</strong> ${d.req}</div>
+        <div class="bg-white p-2 rounded border border-blue-200"><strong>Top Source:</strong> ${d.topSource}</div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      ${lpHTML}
+      ${mapHTML}
+    </div>
+
+    <div class="bg-gray-50 p-4 rounded-lg border-t-4 border-red-700">
+      <div class="text-xs uppercase font-bold text-gray-700 mb-2">🔗 Lihat Lebih Lanjut</div>
+      <div class="flex flex-wrap gap-2">
+        ${match ? `<button class="crosslink-btn" onclick="showCurriculumDetail('${match.id}')">→ Detail kurikulum role ini</button>` : ''}
+        <button class="crosslink-btn" onclick="gotoTab('curriculum', { family: '${d.family}' })">→ Filter family di Curriculum tab</button>
+        <button class="crosslink-btn" onclick="gotoTab('supply', { pillar: 'smk' })">→ Detail SMK</button>
+        <button class="crosslink-btn" onclick="gotoTab('sda')">→ Matrix Kompetensi (SDA)</button>
+      </div>
+    </div>
+  `;
+  openModal(`${d.family} · Demand di ${c.name}`, d.role, `🎯 ${match ? 'Mapping kurikulum tersedia' : 'No exact curriculum match · showing demand context only'}`, body);
+}
 
 // ============================================================
 // SUPPLY-DEMAND ANALYSIS (SDA) TAB
@@ -3060,9 +3355,9 @@ function showCurriculumDetail(id) {
               <div class="mt-3 pt-2 border-t border-gray-100">
                 <div class="text-[10px] uppercase font-bold text-gray-500 mb-2">📍 Throughput & Geographic Breakdown</div>
                 <div class="grid grid-cols-3 gap-1 mb-2">
-                  <div class="throughput-card"><div class="label">Distribusi Lokasi</div><div class="text-xs font-medium text-gray-800 mt-1">${tp.schools}</div></div>
-                  ${tp.students !== null && typeof tp.students === 'number' ? `<div class="throughput-card"><div class="label">Siswa Aktif</div><div class="num">${(tp.students/1000).toFixed(0)}K</div><div class="text-[10px] text-gray-500">total nationwide</div></div>` : `<div class="throughput-card"><div class="label">Siswa</div><div class="text-xs">${tp.students || '—'}</div></div>`}
-                  ${tp.lulusan !== null && typeof tp.lulusan === 'number' ? `<div class="throughput-card"><div class="label">Lulusan/Asesi/Th</div><div class="num">${(tp.lulusan/1000).toFixed(1)}K</div>${tp.growth !== undefined && tp.growth !== null ? `<div class="text-[10px] ${tp.growth >= 0 ? 'text-green-700' : 'text-red-700'}">${tp.growth >= 0 ? '+' : ''}${tp.growth}% YoY</div>` : ''}</div>` : `<div class="throughput-card"><div class="label">Throughput</div><div class="text-xs">${tp.lulusan || '—'}</div></div>`}
+                  <div class="throughput-card"><div class="label">Distribusi Lokasi <span class="tip" data-tip="throughput-location">i</span></div><div class="text-xs font-medium text-gray-800 mt-1">${tp.schools}</div></div>
+                  ${tp.students !== null && typeof tp.students === 'number' ? `<div class="throughput-card"><div class="label">Siswa Aktif <span class="tip" data-tip="throughput-students">i</span></div><div class="num">${(tp.students/1000).toFixed(0)}K</div><div class="text-[10px] text-gray-500">total nationwide</div></div>` : `<div class="throughput-card"><div class="label">Siswa</div><div class="text-xs">${tp.students || '—'}</div></div>`}
+                  ${tp.lulusan !== null && typeof tp.lulusan === 'number' ? `<div class="throughput-card"><div class="label">Lulusan/Asesi/Th <span class="tip" data-tip="throughput-graduates">i</span></div><div class="num">${(tp.lulusan/1000).toFixed(1)}K</div>${tp.growth !== undefined && tp.growth !== null ? `<div class="text-[10px] ${tp.growth >= 0 ? 'text-green-700' : 'text-red-700'}">${tp.growth >= 0 ? '+' : ''}${tp.growth}% YoY</div>` : ''}</div>` : `<div class="throughput-card"><div class="label">Throughput</div><div class="text-xs">${tp.lulusan || '—'}</div></div>`}
                 </div>
                 <div class="bg-gray-50 p-2 rounded text-[10px] text-gray-600 leading-tight">
                   <strong>📊 Top 3 provinsi (estimasi):</strong> ${k === 'smk' ? 'Jabar 19,3% · Jatim 14,1% · Jateng 12,1%' : k === 'ptv' ? 'Jabar 17,9% · Jatim 14,8% · Jateng 10,8%' : k === 'blk' ? 'Jatim 84K · Jabar 78K · Jateng 71K kapasitas/th' : 'Jabar 17,9% · DKI 15,7% · Jatim 14,5%'}<br>
@@ -3136,6 +3431,7 @@ window.addEventListener('load', () => {
   // Default global Chart options to prevent stretching
   Chart.defaults.maintainAspectRatio = false;
   Chart.defaults.responsive = true;
+  setupTooltips();
   initOverviewCharts();
 });
 </script>
