@@ -2862,6 +2862,28 @@ if (geoContainer) {
 // ============================================================
 // SHOW JOB ROLE AT COUNTRY — combines Report B (demand) with Report D (curriculum)
 // ============================================================
+// Country-specific language requirement. Used to contextualize the generic
+// learningPath.language string (which mixes JLPT/Arabic/Mandarin/etc for
+// roles deployed across multiple destinations).
+const COUNTRY_LANGUAGE = {
+  'JP': 'JLPT N4 (Jepang)',
+  'KR': 'EPS-TOPIK (Korean)',
+  'TW': 'Mandarin basic (Taiwan)',
+  'HK': 'English · Cantonese basic',
+  'SG': 'English basic',
+  'AU': 'IELTS 5.5–6.5 (Australia)',
+  'SA': 'English · Arabic basic',
+  'AE': 'English · Arabic basic',
+  'QA': 'English · Arabic basic',
+  'BH': 'English · Arabic basic',
+  'KW': 'English · Arabic basic',
+  'IT': 'Italian basic · English',
+  'DE': 'B1–B2 German',
+  'CA': 'IELTS 6.0–6.5 (Kanada)',
+  'NL': 'English (Dutch opsional)',
+  'TR': 'Turkish basic · English'
+};
+
 function findCurriculumMatch(family, roleText, countryName) {
   const candidates = CURRICULUM.jobRoles.filter(r => r.family === family);
   if (!candidates.length) return null;
@@ -2902,7 +2924,7 @@ function showJobRoleAtCountry(countryCode, demandIdx) {
           <div><p class="font-semibold text-gray-900 text-xs uppercase">Core Skills (${lp.coreSkills.length})</p>
             <ul class="mt-1 space-y-0.5 text-xs">${lp.coreSkills.map(s => `<li>· ${s}</li>`).join('')}</ul></div>
           <div class="grid grid-cols-2 gap-2 pt-2 border-t border-red-200">
-            <div><p class="font-semibold text-xs uppercase text-gray-700">Bahasa Target</p><p class="text-xs">${lp.language}</p></div>
+            <div><p class="font-semibold text-xs uppercase text-gray-700">Bahasa Target untuk ${c.name}</p><p class="text-xs">${COUNTRY_LANGUAGE[c.code] || lp.language}</p></div>
             <div><p class="font-semibold text-xs uppercase text-gray-700">Durasi</p><p class="text-xs">${lp.durationMonths} bln · ${lp.prakerinHours} jam prakerin</p></div>
           </div>
           <div class="pt-2 border-t border-red-200">
