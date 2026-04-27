@@ -1,0 +1,2286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strategi Penempatan PMI — Dashboard Terpadu</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    --pmi-red-darkest: #6B0000; --pmi-red-dark: #8B0000; --pmi-red: #B22222; --pmi-red-light: #DC143C;
+    --pmi-navy: #1E3A5F; --pmi-gold: #F4B400; --pmi-cream: #FAFAF7; --pmi-ink: #1A1A1A; --pmi-muted: #6B7280;
+  }
+  body { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; background: var(--pmi-cream); color: var(--pmi-ink); }
+  .gradient-header { background: linear-gradient(135deg, #8B0000 0%, #B22222 50%, #DC143C 100%); }
+  .gradient-hero { background: linear-gradient(135deg, #6B0000 0%, #8B0000 60%, #B22222 100%); position: relative; overflow: hidden; }
+  .gradient-hero::before { content:''; position:absolute; top:-50%; right:-10%; width:600px; height:600px; background:radial-gradient(circle, rgba(244,180,0,0.18) 0%, transparent 70%); pointer-events:none; }
+  .gradient-hero::after { content:''; position:absolute; bottom:-30%; left:-10%; width:500px; height:500px; background:radial-gradient(circle, rgba(255,255,255,0.06) 0%, transparent 70%); pointer-events:none; }
+
+  /* Sticky tab nav */
+  .tab-nav { background: rgba(255,255,255,0.98); backdrop-filter: blur(8px); border-bottom: 1px solid #E5E7EB; position: sticky; top: 0; z-index: 50; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+  .tab-btn { color: #4B5563; font-weight: 500; padding: 1rem 1.25rem; border-bottom: 3px solid transparent; transition: all 0.15s; cursor: pointer; white-space: nowrap; font-size: 0.95rem; }
+  .tab-btn:hover { color: var(--pmi-red-dark); background: #FFF8F8; }
+  .tab-btn.active { color: var(--pmi-red-dark); border-bottom-color: var(--pmi-red-dark); font-weight: 600; }
+  .tab-btn .badge { display:inline-block; background:#FEE2E2; color:var(--pmi-red-dark); font-size:0.7rem; padding:1px 6px; border-radius:10px; margin-left:4px; vertical-align:middle; font-weight:700; }
+  .tab-btn.active .badge { background: var(--pmi-red-dark); color: white; }
+
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; animation: fadeIn 0.3s ease; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* Cards */
+  .stat-card { background: white; border-radius: 12px; padding: 1.5rem; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+  .country-card { transition: all 0.2s ease-in-out; cursor: pointer; }
+  .country-card:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(139,0,0,0.15); }
+  .visa-pill { background: #FFF8F0; border-left: 3px solid var(--pmi-red-dark); }
+  .feature-card { background: white; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.06); transition: all 0.25s ease; border: 1px solid #F3F4F6; }
+  .feature-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(139,0,0,0.12); border-color: var(--pmi-red); }
+
+  /* Region badges */
+  .region-asia { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+  .region-oceania { background: #E1F5FE; color: #0277BD; border: 1px solid #B3E5FC; }
+  .region-europe { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+  .region-gcc { background: #EFEBE9; color: #5D4037; border: 1px solid #D7CCC8; }
+  .region-namerica { background: #F3E5F5; color: #6A1B9A; border: 1px solid #E1BEE7; }
+
+  /* Filters */
+  .filter-btn { transition: all 0.15s; cursor: pointer; }
+  .filter-btn.active { background: var(--pmi-red-dark); color: white; }
+  details summary { cursor: pointer; list-style: none; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: '▾'; float: right; transition: transform 0.2s; }
+  details[open] summary::after { transform: rotate(180deg); }
+  .scroll-x::-webkit-scrollbar { height: 6px; }
+  .scroll-x::-webkit-scrollbar-thumb { background: var(--pmi-red-dark); border-radius: 3px; }
+
+  /* Pillar cards */
+  .pillar-card { transition: all 0.25s ease; cursor: pointer; }
+  .pillar-card:hover { transform: translateY(-4px); box-shadow: 0 12px 30px rgba(139,0,0,0.15); }
+  .pillar-card.smk { border-top: 4px solid #8B0000; }
+  .pillar-card.ptv { border-top: 4px solid #1E3A5F; }
+  .pillar-card.blk { border-top: 4px solid #2E7D32; }
+  .pillar-card.lsp { border-top: 4px solid #F4B400; }
+
+  /* Status indicators (Report D) */
+  .status-aligned { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+  .status-partial { background: #FFF3E0; color: #E65100; border: 1px solid #FFE0B2; }
+  .status-missing { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+  .matrix-cell { padding: 8px; text-align: center; font-size: 12px; font-weight: 600; border: 1px solid #F3F4F6; transition: all 0.15s; cursor: pointer; }
+  .matrix-cell:hover { transform: scale(1.05); z-index: 5; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+  .matrix-cell.aligned { background: #C8E6C9; color: #1B5E20; }
+  .matrix-cell.partial { background: #FFE0B2; color: #BF360C; }
+  .matrix-cell.missing { background: #FFCDD2; color: #B71C1C; }
+  .verdict-box { background: linear-gradient(135deg, #FFF1F1 0%, #FFFBEB 100%); border: 2px solid #F4B400; }
+  .index-bar { height: 8px; background: #F3F4F6; border-radius: 4px; overflow: hidden; }
+  .index-fill { height: 100%; transition: width 0.6s ease; }
+
+  /* Modal */
+  .modal-backdrop { background: rgba(0,0,0,0.6); }
+
+  /* Section eyebrow */
+  .section-eyebrow { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--pmi-red-dark); }
+
+  /* Coverage bar */
+  .coverage-bar { height: 6px; background: #F3F4F6; border-radius: 3px; overflow: hidden; }
+</style>
+</head>
+<body>
+
+<!-- HERO HEADER -->
+<header class="gradient-hero text-white">
+  <div class="max-w-7xl mx-auto px-6 py-10 md:py-14 relative">
+    <p class="section-eyebrow text-yellow-300 mb-3">Kementerian Pelindungan Pekerja Migran Indonesia</p>
+    <h1 class="text-3xl md:text-5xl font-bold leading-tight">
+      Strategi Penempatan PMI <span class="text-yellow-300">— Dashboard Terpadu</span>
+    </h1>
+    <p class="text-base md:text-lg text-red-100 mt-3 max-w-3xl">
+      4 Report dalam satu tampilan: pemetaan visa di 16 negara · demand analysis 6,5 juta posisi global · supply infrastruktur vokasi Indonesia · curriculum gap matrix 22 job role.
+    </p>
+  </div>
+</header>
+
+<!-- KPI STRIP -->
+<section class="max-w-7xl mx-auto px-6 -mt-6 relative z-10">
+  <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
+    <div class="stat-card border-t-4 border-red-700">
+      <div class="text-2xl md:text-3xl font-bold text-red-800">16</div>
+      <div class="text-xs text-gray-500 mt-1">Negara Tujuan</div>
+    </div>
+    <div class="stat-card border-t-4 border-blue-800">
+      <div class="text-2xl md:text-3xl font-bold text-blue-900">6,5 jt</div>
+      <div class="text-xs text-gray-500 mt-1">Demand Global</div>
+    </div>
+    <div class="stat-card border-t-4 border-green-700">
+      <div class="text-2xl md:text-3xl font-bold text-green-800">25.642</div>
+      <div class="text-xs text-gray-500 mt-1">Lembaga Vokasi</div>
+    </div>
+    <div class="stat-card border-t-4 border-yellow-600">
+      <div class="text-2xl md:text-3xl font-bold text-yellow-700">2,24 jt</div>
+      <div class="text-xs text-gray-500 mt-1">Lulusan/tahun</div>
+    </div>
+    <div class="stat-card border-t-4 border-purple-700">
+      <div class="text-2xl md:text-3xl font-bold text-purple-800">41,2</div>
+      <div class="text-xs text-gray-500 mt-1">Readiness /100</div>
+    </div>
+  </div>
+</section>
+
+<!-- TAB NAV -->
+<nav class="tab-nav mt-8">
+  <div class="max-w-7xl mx-auto px-6 overflow-x-auto scroll-x">
+    <div class="flex items-center gap-1">
+      <button class="tab-btn active" data-tab="overview">📊 Overview</button>
+      <button class="tab-btn" data-tab="visa">🗺️ Pemetaan Visa <span class="badge">A</span></button>
+      <button class="tab-btn" data-tab="deepdive">🌐 Deep Dive Negara <span class="badge">B</span></button>
+      <button class="tab-btn" data-tab="supply">🏫 Supply Mapping <span class="badge">C</span></button>
+      <button class="tab-btn" data-tab="curriculum">📚 Kurikulum <span class="badge">D</span></button>
+    </div>
+  </div>
+</nav>
+
+<!-- ============== OVERVIEW TAB ============== -->
+<div class="tab-panel active" id="tab-overview">
+  <section class="max-w-7xl mx-auto px-6 py-10">
+
+    <!-- Strategic flow -->
+    <div class="mb-10">
+      <p class="section-eyebrow">Logic Flow Analisis</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-2">Demand → Supply → Gap → Action</h2>
+      <p class="text-gray-600 mt-2 max-w-3xl">4 report saling terkait dalam satu rantai logika. Klik untuk loncat ke section.</p>
+
+      <div class="grid md:grid-cols-4 gap-4 mt-6">
+        <button onclick="switchTab('visa')" class="feature-card text-left">
+          <div class="flex items-center justify-between mb-3"><span class="text-3xl">🗺️</span><span class="region-asia px-2 py-1 rounded-full text-xs font-bold">A</span></div>
+          <h3 class="font-bold text-gray-900">Demand: Visa</h3>
+          <p class="text-sm text-gray-600 mt-1">16 negara · 69+ visa · matriks regulasi</p>
+          <div class="text-xs text-red-800 font-semibold mt-3">Mulai dari sini →</div>
+        </button>
+        <button onclick="switchTab('deepdive')" class="feature-card text-left">
+          <div class="flex items-center justify-between mb-3"><span class="text-3xl">🌐</span><span class="region-europe px-2 py-1 rounded-full text-xs font-bold">B</span></div>
+          <h3 class="font-bold text-gray-900">Demand: Per Negara</h3>
+          <p class="text-sm text-gray-600 mt-1">Job role · gap fulfillment · kompetitor source country</p>
+          <div class="text-xs text-red-800 font-semibold mt-3">Drill-down →</div>
+        </button>
+        <button onclick="switchTab('supply')" class="feature-card text-left">
+          <div class="flex items-center justify-between mb-3"><span class="text-3xl">🏫</span><span class="region-oceania px-2 py-1 rounded-full text-xs font-bold">C</span></div>
+          <h3 class="font-bold text-gray-900">Supply Indonesia</h3>
+          <p class="text-sm text-gray-600 mt-1">SMK + PTV + BLK + LSP · gap analysis</p>
+          <div class="text-xs text-red-800 font-semibold mt-3">Apa yang kita punya? →</div>
+        </button>
+        <button onclick="switchTab('curriculum')" class="feature-card text-left">
+          <div class="flex items-center justify-between mb-3"><span class="text-3xl">📚</span><span class="region-gcc px-2 py-1 rounded-full text-xs font-bold">D</span></div>
+          <h3 class="font-bold text-gray-900">Curriculum Gap</h3>
+          <p class="text-sm text-gray-600 mt-1">22 job role × 4 institusi · aligned/partial/missing</p>
+          <div class="text-xs text-red-800 font-semibold mt-3">Action plan →</div>
+        </button>
+      </div>
+    </div>
+
+    <!-- Cross-report charts -->
+    <div class="grid md:grid-cols-2 gap-6 mt-12">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-1">Top 10 Destinasi PMI 2024</h3>
+        <p class="text-xs text-gray-500 mb-4">BP2MI · 297.434 penempatan total</p>
+        <canvas id="ovChart1" height="220"></canvas>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-1">Demand vs Supply per Job Family</h3>
+        <p class="text-xs text-gray-500 mb-4">Cross-ref Report B (demand) × Report C (supply lulusan)</p>
+        <canvas id="ovChart2" height="220"></canvas>
+      </div>
+    </div>
+
+    <!-- 3-tier strategy -->
+    <div class="mt-12">
+      <p class="section-eyebrow">Rekomendasi Strategis</p>
+      <h2 class="text-2xl font-bold text-gray-900 mt-2">Strategi 3 Tier — Target 480K PMI/tahun di 2029</h2>
+      <div class="grid md:grid-cols-3 gap-4 mt-6">
+        <div class="bg-white border-l-4 border-red-700 rounded-r-xl p-5 shadow-sm">
+          <p class="text-xs font-bold tracking-widest text-red-700">TIER 1</p>
+          <h3 class="text-lg font-bold mt-1">High Volume Bilateral</h3>
+          <p class="text-xs text-gray-600">Jepang · Korea · Taiwan</p>
+          <div class="text-2xl font-bold text-red-800 mt-3">350K</div>
+          <p class="text-xs text-gray-500">PMI/tahun</p>
+        </div>
+        <div class="bg-white border-l-4 border-blue-800 rounded-r-xl p-5 shadow-sm">
+          <p class="text-xs font-bold tracking-widest text-blue-800">TIER 2</p>
+          <h3 class="text-lg font-bold mt-1">High Growth Skilled</h3>
+          <p class="text-xs text-gray-600">Jerman · Australia · Kanada</p>
+          <div class="text-2xl font-bold text-blue-900 mt-3">50K</div>
+          <p class="text-xs text-gray-500">PMI/tahun</p>
+        </div>
+        <div class="bg-white border-l-4 border-yellow-600 rounded-r-xl p-5 shadow-sm">
+          <p class="text-xs font-bold tracking-widest text-yellow-700">TIER 3</p>
+          <h3 class="text-lg font-bold mt-1">GCC Diversifikasi</h3>
+          <p class="text-xs text-gray-600">Saudi · UAE · Qatar · BH · KW</p>
+          <div class="text-2xl font-bold text-yellow-700 mt-3">80K</div>
+          <p class="text-xs text-gray-500">PMI/tahun</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Verdict box -->
+    <div class="verdict-box rounded-xl p-6 md:p-8 mt-12">
+      <p class="text-xs uppercase font-bold tracking-wider text-yellow-800">Headline Verdict</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-2">SUFFICIENT volume, MAJOR gaps in alignment</h2>
+      <p class="mt-3 text-gray-700 text-sm md:text-base">
+        Indonesia punya <strong>2,24 juta lulusan vokasi/tahun</strong> dari 25.642 lembaga — secara volume <strong>5x kebutuhan PMI 2029</strong>. Namun hanya <strong>16,3%</strong> siap-deploy karena 4 gap kritis: kurikulum mismatch (73%), bahasa target (cuma 8%), sertifikasi PMI (cuma 6,5% LSP), distribusi geografis (51% di Jawa).
+      </p>
+      <div class="grid md:grid-cols-2 gap-3 mt-5 text-sm">
+        <div class="bg-white p-3 rounded-lg border border-yellow-200"><strong>Action Priority 1:</strong> Wajibkan bahasa target di 200 SMK Pusat Keunggulan</div>
+        <div class="bg-white p-3 rounded-lg border border-yellow-200"><strong>Action Priority 2:</strong> Bridging program 6-12 bulan via 1.287 LPK BP2MI</div>
+        <div class="bg-white p-3 rounded-lg border border-yellow-200"><strong>Action Priority 3:</strong> BNSP perluas MRA ke 5 negara/tahun</div>
+        <div class="bg-white p-3 rounded-lg border border-yellow-200"><strong>Action Priority 4:</strong> Buat 7 konsentrasi SMK baru (Barista, FDH, Driver, dll)</div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<!-- ============== VISA TAB (Report A) ============== -->
+<div class="tab-panel" id="tab-visa">
+  <section class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-6">
+      <p class="section-eyebrow">Report A — Pemetaan Visa</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">69+ Jenis Visa di 16 Negara</h2>
+      <p class="text-gray-600 mt-2">Persyaratan, kuota tahunan, gaji, durasi, jalur PR, MoU dengan Indonesia.</p>
+    </div>
+
+    <!-- Filter bar -->
+    <div class="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-2 items-center mb-6">
+      <span class="text-xs font-bold uppercase text-gray-500 mr-2">Filter Region:</span>
+      <button class="filter-btn-a active px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="all">Semua</button>
+      <button class="filter-btn-a px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="Asia Timur">Asia Timur</button>
+      <button class="filter-btn-a px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="Asia Tenggara">Asia Tenggara</button>
+      <button class="filter-btn-a px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="Oseania">Oseania</button>
+      <button class="filter-btn-a px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="Eropa">Eropa</button>
+      <button class="filter-btn-a px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="GCC">GCC</button>
+      <button class="filter-btn-a px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-region="Amerika Utara">Amerika</button>
+      <input type="text" id="searchA" placeholder="Cari negara/visa..." class="ml-auto border border-gray-300 rounded-lg px-3 py-1.5 text-sm">
+    </div>
+
+    <!-- Country grid -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="visaGrid"></div>
+
+    <!-- Charts -->
+    <div class="grid md:grid-cols-2 gap-6 mt-10">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-4">PMI per Negara 2024</h3>
+        <canvas id="visaChart1" height="220"></canvas>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-4">Distribusi per Region</h3>
+        <canvas id="visaChart2" height="220"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============== DEEP DIVE TAB (Report B) ============== -->
+<div class="tab-panel" id="tab-deepdive">
+  <section class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-6">
+      <p class="section-eyebrow">Report B — Country Deep Dive</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">Demand vs Fulfillment per Job Role</h2>
+      <p class="text-gray-600 mt-2">Pilih negara untuk lihat detail per job family, kompetitor source country, dan fulfillment rate.</p>
+    </div>
+
+    <!-- Country selector -->
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+      <label class="text-xs font-bold uppercase text-gray-500 mr-2">Negara:</label>
+      <select id="ddCountry" class="border border-gray-300 rounded-lg px-3 py-2 text-sm font-semibold w-full md:w-auto"></select>
+    </div>
+
+    <!-- Country detail -->
+    <div id="ddDetail"></div>
+
+    <!-- Aggregated charts -->
+    <div class="grid md:grid-cols-2 gap-6 mt-10">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-4">Total Demand per Job Family</h3>
+        <canvas id="ddChart1" height="220"></canvas>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-4">Indonesia Share vs Top Kompetitor</h3>
+        <canvas id="ddChart2" height="220"></canvas>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ============== SUPPLY TAB (Report C) ============== -->
+<div class="tab-panel" id="tab-supply">
+  <section class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-6">
+      <p class="section-eyebrow">Report C — Supply Mapping</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">Infrastruktur Vokasi Indonesia</h2>
+    </div>
+
+    <div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded-r-lg mb-6">
+      <p class="text-xs uppercase font-bold tracking-wider text-yellow-800">Pertanyaan Utama</p>
+      <p class="mt-1 text-base font-semibold text-gray-800">Apakah Indonesia punya lembaga, kurikulum, dan infrastruktur cukup untuk supply demand PMI di Report B?</p>
+    </div>
+
+    <!-- 4 pillars -->
+    <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+      <div class="pillar-card smk bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('smk')">
+        <div class="flex justify-between items-start"><div class="text-3xl">🏫</div><span class="text-xs font-bold text-red-800 bg-red-50 px-2 py-1 rounded">A</span></div>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">SMK</h3>
+        <p class="text-xs text-gray-500">Sekolah Menengah Kejuruan</p>
+        <div class="mt-3 space-y-1 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">Total</span><span class="font-bold">14.442</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Siswa</span><span class="font-bold">5,08 jt</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Lulusan/th</span><span class="font-bold">1,45 jt</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Konsentrasi</span><span class="font-bold">128</span></div>
+        </div>
+      </div>
+      <div class="pillar-card ptv bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('ptv')">
+        <div class="flex justify-between items-start"><div class="text-3xl">🎓</div><span class="text-xs font-bold text-blue-900 bg-blue-50 px-2 py-1 rounded">B</span></div>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">PT Vokasi</h3>
+        <p class="text-xs text-gray-500">Politeknik & Akademi</p>
+        <div class="mt-3 space-y-1 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">Total</span><span class="font-bold">266</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Mahasiswa</span><span class="font-bold">904K</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Lulusan/th</span><span class="font-bold">218K</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Prodi</span><span class="font-bold">287</span></div>
+        </div>
+      </div>
+      <div class="pillar-card blk bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('blk')">
+        <div class="flex justify-between items-start"><div class="text-3xl">🛠️</div><span class="text-xs font-bold text-green-800 bg-green-50 px-2 py-1 rounded">C</span></div>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">BLK / LPK</h3>
+        <p class="text-xs text-gray-500">Balai Latihan Kerja</p>
+        <div class="mt-3 space-y-1 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">BLK Pemerintah</span><span class="font-bold">303</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">BLKK</span><span class="font-bold">4.800</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">LPK Swasta</span><span class="font-bold">17.850</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Kapasitas/th</span><span class="font-bold">615K</span></div>
+        </div>
+      </div>
+      <div class="pillar-card lsp bg-white rounded-xl p-5 shadow-sm" onclick="showPillar('lsp')">
+        <div class="flex justify-between items-start"><div class="text-3xl">📜</div><span class="text-xs font-bold text-yellow-700 bg-yellow-50 px-2 py-1 rounded">D</span></div>
+        <h3 class="text-lg font-bold text-gray-900 mt-3">LSP / BNSP</h3>
+        <p class="text-xs text-gray-500">Sertifikasi Profesi</p>
+        <div class="mt-3 space-y-1 text-sm">
+          <div class="flex justify-between"><span class="text-gray-500">Total LSP</span><span class="font-bold">1.981</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Skema</span><span class="font-bold">4.280</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">Asesi 2024</span><span class="font-bold">1,37 jt</span></div>
+          <div class="flex justify-between"><span class="text-gray-500">+YoY</span><span class="font-bold text-green-700">+11,5%</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="supply-pillar-detail" class="bg-white rounded-xl shadow-sm p-6 mb-8"></div>
+
+    <!-- Gap analysis -->
+    <div class="mb-6">
+      <p class="section-eyebrow">Demand-Supply Gap Analysis</p>
+      <h3 class="text-xl font-bold text-gray-900 mt-1">Per Job Family</h3>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-8">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-red-800 text-white">
+            <tr>
+              <th class="px-4 py-3 text-left">Job Family</th>
+              <th class="px-4 py-3 text-right">Demand PMI</th>
+              <th class="px-4 py-3 text-right">Supply</th>
+              <th class="px-4 py-3 text-right">Cert</th>
+              <th class="px-4 py-3 text-left">Status</th>
+              <th class="px-4 py-3 text-left">Catatan</th>
+            </tr>
+          </thead>
+          <tbody id="supplyGapTable" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Per destination -->
+    <div class="mb-6">
+      <p class="section-eyebrow">Bottleneck per Negara Tujuan</p>
+      <h3 class="text-xl font-bold text-gray-900 mt-1">PMI Siap-Deploy vs Demand</h3>
+    </div>
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4" id="supplyDestGrid"></div>
+
+    <!-- Verdict -->
+    <div class="verdict-box rounded-xl p-6 md:p-8 mt-10">
+      <p class="text-xs uppercase font-bold tracking-wider text-yellow-800">Verdict</p>
+      <h3 class="text-2xl md:text-3xl font-bold text-gray-900 mt-2">SUFFICIENT — with MAJOR GAPS</h3>
+      <p class="mt-3 text-gray-700 text-sm md:text-base">
+        Volume infrastruktur cukup (2,24 jt lulusan/tahun vs target 480K PMI). Namun cuma <strong>16,3% siap-deploy</strong>. Gap kritis: kurikulum, bahasa, sertifikasi, geografis.
+      </p>
+      <div class="mt-6">
+        <p class="text-xs uppercase font-bold tracking-wider text-gray-700 mb-3">Readiness Index Breakdown</p>
+        <div id="readinessBars" class="space-y-3"></div>
+      </div>
+    </div>
+
+  </section>
+</div>
+
+<!-- ============== CURRICULUM TAB (Report D) ============== -->
+<div class="tab-panel" id="tab-curriculum">
+  <section class="max-w-7xl mx-auto px-6 py-10">
+    <div class="mb-6">
+      <p class="section-eyebrow">Report D — Curriculum Transformation</p>
+      <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mt-1">Learning Path PMI ↔ Kurikulum Vokasi</h2>
+      <p class="text-gray-600 mt-2">22 job role · 4 jenis lembaga · status aligned/partial/missing per institusi.</p>
+    </div>
+
+    <!-- Coverage KPIs -->
+    <div class="grid md:grid-cols-4 gap-4 mb-6">
+      <div class="bg-white rounded-xl shadow-sm p-4">
+        <p class="text-xs uppercase font-bold text-gray-500">SMK Coverage</p>
+        <div class="text-2xl font-bold text-red-800 mt-1">51,5%</div>
+        <div class="coverage-bar mt-2"><div style="width: 51.5%; height: 100%; background: #8B0000;"></div></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-4">
+        <p class="text-xs uppercase font-bold text-gray-500">PT Vokasi Coverage</p>
+        <div class="text-2xl font-bold text-blue-900 mt-1">60,4%</div>
+        <div class="coverage-bar mt-2"><div style="width: 60.4%; height: 100%; background: #1E3A5F;"></div></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-4">
+        <p class="text-xs uppercase font-bold text-gray-500">BLK Coverage</p>
+        <div class="text-2xl font-bold text-green-800 mt-1">65,4%</div>
+        <div class="coverage-bar mt-2"><div style="width: 65.4%; height: 100%; background: #2E7D32;"></div></div>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-4">
+        <p class="text-xs uppercase font-bold text-gray-500">LSP Coverage</p>
+        <div class="text-2xl font-bold text-yellow-700 mt-1">67,0%</div>
+        <div class="coverage-bar mt-2"><div style="width: 67%; height: 100%; background: #F4B400;"></div></div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="bg-white rounded-xl shadow-sm p-4 mb-4 flex items-center gap-2 flex-wrap">
+      <span class="text-xs uppercase font-bold text-gray-500 mr-2">Job Family:</span>
+      <button class="filter-pill-d active px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="all">Semua</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Caregiving & Healthcare">Caregiving</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Construction & Trades">Construction</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Manufacturing & Industrial">Manufacturing</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Hospitality & Food Service">Hospitality</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Agriculture & Fisheries">Agriculture</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Domestic Services">Domestic</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Automotive & Maintenance">Automotive</button>
+      <button class="filter-pill-d px-3 py-1.5 rounded-full text-sm border border-gray-300 bg-white" data-family="Cleaning & Building Services">Cleaning</button>
+    </div>
+
+    <!-- Legend -->
+    <div class="flex items-center gap-3 flex-wrap text-sm mb-4">
+      <span class="text-xs uppercase font-bold text-gray-500">Legend:</span>
+      <span class="status-aligned px-3 py-1 rounded-full text-xs font-semibold">✓ ALIGNED</span>
+      <span class="status-partial px-3 py-1 rounded-full text-xs font-semibold">⚠ PARTIAL</span>
+      <span class="status-missing px-3 py-1 rounded-full text-xs font-semibold">✗ MISSING</span>
+    </div>
+
+    <!-- Matrix -->
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-left font-semibold text-gray-700">Job Role</th>
+              <th class="px-4 py-3 text-left font-semibold text-gray-700">Family</th>
+              <th class="px-4 py-3 text-right font-semibold text-gray-700">Demand</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">SMK</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">PT Vokasi</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">BLK</th>
+              <th class="px-4 py-3 text-center font-semibold text-gray-700 w-24">LSP</th>
+            </tr>
+          </thead>
+          <tbody id="curriculumMatrix" class="divide-y divide-gray-100"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Status charts -->
+    <div class="grid md:grid-cols-2 gap-6 mt-10">
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-1">Distribusi Status per Institusi</h3>
+        <p class="text-xs text-gray-500 mb-4">22 job role × 4 jenis lembaga</p>
+        <canvas id="curChart1" height="240"></canvas>
+      </div>
+      <div class="bg-white rounded-xl shadow-sm p-6">
+        <h3 class="font-bold text-gray-900 mb-1">Average Coverage</h3>
+        <p class="text-xs text-gray-500 mb-4">Higher = lebih siap supply PMI</p>
+        <canvas id="curChart2" height="240"></canvas>
+      </div>
+    </div>
+
+    <!-- Priorities -->
+    <div class="mt-10">
+      <p class="section-eyebrow">5 Prioritas Transformasi</p>
+      <h3 class="text-xl font-bold text-gray-900 mt-1">Action plan kurikulum 12 bulan</h3>
+      <div class="grid md:grid-cols-1 gap-3 mt-4" id="priorityList"></div>
+    </div>
+  </section>
+</div>
+
+<!-- DETAIL MODAL -->
+<div id="modal" class="modal-backdrop fixed inset-0 hidden flex items-center justify-center p-4 z-50">
+  <div class="bg-white rounded-2xl max-w-5xl w-full max-h-[90vh] overflow-y-auto">
+    <div class="bg-red-800 text-white p-6 sticky top-0 z-10">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-yellow-200" id="modalEyebrow"></p>
+          <h2 class="text-2xl font-bold mt-1" id="modalTitle"></h2>
+          <p class="text-red-100 text-sm mt-1" id="modalSubtitle"></p>
+        </div>
+        <button onclick="closeModal()" class="text-white/70 hover:text-white text-3xl leading-none">×</button>
+      </div>
+    </div>
+    <div class="p-6" id="modalBody"></div>
+  </div>
+</div>
+
+<footer class="bg-gray-900 text-gray-400 text-xs">
+  <div class="max-w-7xl mx-auto px-6 py-6 text-center">
+    Dashboard Terpadu PMI · KemenP2MI 2026 · Sumber: BP2MI · BPS Sakernas 2023 · Pusdatin Kemendikbud · PDDikti · Kemnaker · BNSP · MOFA Jepang · MOEL Korea · MOL Taiwan · MOM Singapura · BAMF Jerman · MOHRE UAE · HRSD Saudi · Vision 2030 · Statista 2025
+  </div>
+</footer>
+
+<script>
+// ============================================================
+// EMBEDDED DATA — All 4 reports inline
+// ============================================================
+
+// REPORT A — Countries
+const countries = [
+  {code:"JP",name:"Jepang",flag:"🇯🇵",region:"Asia Timur",pmi:12720,rank:2,salary:"Rp17-30 juta",lang:"JLPT N4",visa:"Specified Skilled Worker (SSW)",quota:"Target 800K (2029)",
+   visaTypes:[
+     {n:"Specified Skilled Worker (SSW)",t:"Pekerja vokasi siap kerja - 16 sektor",d:"SSW-1: 5 tahun (no family); SSW-2: unlimited",q:"Target 800K (2029); 284K eksisting",s:"¥160K-280K/bulan",r:"Usia 18+, JLPT N4, Skills Test, Health"},
+     {n:"Care Worker (Kaigo)",t:"Caregiver bersertifikat",d:"Indefinite (jalur PR)",q:"Tidak terbatas formal",s:"¥200K-260K/bulan",r:"Sertifikat Kaigofukushishi, JLPT N3+"},
+     {n:"Technical Intern Training (TITP)",t:"Magang teknis (akan dihapus 2027)",d:"Max 5 tahun",q:"Sedang transisi",s:"Min wage prefektur",r:"Usia 18-35, dasar Jepang"}
+   ],
+   sektor:"Nursing care, Building Cleaning, Industrial Manufacturing, Construction, Shipbuilding, Automobile Maintenance, Aviation, Accommodation, Auto Transport, Railway, Agriculture, Fisheries, Food Manufacturing, Food Service, Forestry, Timber",
+   indoMOU:"MoC 2023: target 100K pekerja Indonesia/5 tahun (70K via SSW)",
+   keyJobs:["Caregiver","Construction","Food service","Manufacturing operator","Agriculture worker","Hospitality"],
+   challenges:"Bahasa Jepang JLPT N4, biaya pelatihan tinggi, kompetisi dengan Vietnam"
+  },
+  {code:"KR",name:"Korea Selatan",flag:"🇰🇷",region:"Asia Timur",pmi:10750,rank:4,salary:"Rp24-32 juta",lang:"EPS-TOPIK",visa:"E-9 EPS",quota:"130K (2025) → 80K (2026)",
+   visaTypes:[
+     {n:"E-9 Non-Professional (EPS)",t:"Sektor labor-intensive",d:"Max 4y10m, +2y extension",q:"130K (2025), 80K (2026); Manufacturing: 72K, Shipbuilding: 5K",s:"Min wage ₩2.096.270/bulan",r:"EPS-TOPIK, usia 18-39, skills test"},
+     {n:"E-7-4 Skilled Worker",t:"Upgrade dari E-9 ke pekerja terampil",d:"Renewable, jalur PR",q:"33.000 spots (2025)",s:"Min ₩26 juta/tahun",r:"4+ tahun di E-9, K-Point 200+/300, employer rec"},
+     {n:"E-8 Seasonal Worker",t:"Pertanian/perikanan musiman",d:"Max 5 bulan",q:"75.000 (naik 7K)",s:"Min wage Korea",r:"MoU pemda, dasar Korea"},
+     {n:"E-9 Domestic Worker (Pilot)",t:"Childcare/housekeeping (Filipina+Indonesia pilot)",d:"Pilot 2024-2026",q:"Diperluas dari 100 awal",s:"Min wage Korea",r:"TESDA cert, usia 24-38, no dependents"}
+   ],
+   sektor:"Manufacturing (72K), Construction, Agriculture, Fisheries, Services (limited), Shipbuilding (5K)",
+   indoMOU:"G2G EPS sejak 2004, 17 negara mitra",
+   keyJobs:["Manufacturing operator","Welder","Painter","Mason","Agriculture worker","Fisheries deckhand"],
+   challenges:"EPS-TOPIK Korean wajib, kuota turun signifikan, no dependents"
+  },
+  {code:"TW",name:"Taiwan",flag:"🇹🇼",region:"Asia Timur",pmi:84581,rank:1,salary:"Rp10-18 juta",lang:"Mandarin dasar",visa:"Migrant Worker + Caregiver",quota:"~858K total migrant",
+   visaTypes:[
+     {n:"Migrant Worker - Industrial",t:"Manufacturing, construction, fishery",d:"Max 12 tahun",q:"Total ~858K migrant per Sep 2025; manufaktur 40% workforce, total 50%",s:"Min wage NT$28.590 (2025), NT$29.500 (2026)",r:"Health, criminal, broker, dasar Mandarin"},
+     {n:"Migrant Worker - Caregiver",t:"Pengasuh lansia/disabled (90% PMI Taiwan)",d:"Max 14 tahun",q:"Tidak terbatas; ~210K+ caregivers",s:"Live-in NT$20K+; institutional NT$28.590+",r:"TESDA cert setara, dasar Mandarin"},
+     {n:"Intermediate Skilled Foreign Worker",t:"Upgrade dari migrant worker",d:"Renewable, jalur PR",q:"25% cap akan dihapus; manufaktur min NT$33K",s:"NT$24K-33K+/bulan",r:"6+ tahun, sertifikat profesional"}
+   ],
+   sektor:"Manufacturing, Construction, Fisheries, Slaughterhouse, Caregiving (#1 sektor PMI)",
+   indoMOU:"Taiwan akan buat recruitment center di Indonesia (Q1 2026 G2G pilot)",
+   keyJobs:["Caregiver (live-in & institutional)","Manufacturing operator","Fisheries","Construction","Domestic helper"],
+   challenges:"12-14 tahun cap diprotes, broker fee tinggi, live-in caregiver tidak dilindungi LSA"
+  },
+  {code:"HK",name:"Hong Kong",flag:"🇭🇰",region:"Asia Timur",pmi:99773,rank:2,salary:"Rp10-25 juta",lang:"Cantonese/English",visa:"FDH + ESLS + CSS",quota:"30K (CSS+ESLS+TPL)",
+   visaTypes:[
+     {n:"Foreign Domestic Helper (FDH)",t:"Asisten rumah tangga (PRT)",d:"2 tahun renewable",q:"~370K+ FDH total",s:"Min HK$4.990/bulan",r:"Sertifikat domestic helper, kontrak SEC"},
+     {n:"Enhanced Supplementary Labour Scheme (ESLS)",t:"Pekerja teknis 26 sektor (cooks, waiters, retail)",d:"Max 24 bulan",q:"9.056 kuota aktif (Juni 2025)",s:"Median wage per posisi",r:"SEC, employer rekrut lokal 6 minggu, manning ratio 1:2"},
+     {n:"Construction Sector Scheme (CSS)",t:"Tukang konstruksi spesialis",d:"Sesuai kontrak proyek",q:"12.000 kuota total",s:"Median wage trade-spesifik",r:"Trade test, principal contractor proyek HK$1B+"},
+     {n:"Technical Professional List (Pilot 2025)",t:"Profesional teknis non-degree",d:"3 tahun pilot",q:"10.000 total; max 3.000/trade",s:"Median wage profesional",r:"Usia 18-40, sertifikasi trade"},
+     {n:"Transport Sector LIS",t:"Pengemudi minibus, coach, ground handler",d:"Sesuai kontrak",q:"8.000 (6.300 aviation + 1.700 PLB/coach)",s:"Median wage HK",r:"SIM non-lokal 1+ tahun, lulus driving test HK"}
+   ],
+   sektor:"Domestic, Construction, Catering, Retail, Healthcare, Aviation, Transport, 8 trades pilot",
+   indoMOU:"MoU FDH historis",
+   keyJobs:["Domestic helper","Caregiver","Junior cook","Waiter (ESLS)","Construction trades"],
+   challenges:"Dominansi PRT >95% PMI HK, upah tertekan, regulasi ketat 2025"
+  },
+  {code:"SG",name:"Singapura",flag:"🇸🇬",region:"Asia Timur",pmi:10819,rank:6,salary:"Rp19-50 juta",lang:"English dasar",visa:"WP + S Pass + EP",quota:"DRC sektoral",
+   visaTypes:[
+     {n:"Work Permit (WP)",t:"Pekerja semi-skilled 5 sektor",d:"Max 2y renewable; cap durasi total dihapus 1 Jul 2025",q:"DRC: Construction 83.3%, Marine 77.8%, Manufacturing 60%, Services 35%; total ~1.4M",s:"S$1.600-2.000/bulan",r:"Negara sumber approved, medical, levy, akomodasi"},
+     {n:"S Pass",t:"Mid-level skilled (technicians)",d:"Max 2y renewable",q:"DRC 10% services, 15% sektor lain; min S$3.300 umum (Sep 2025)",s:"Min S$3.300/bulan",r:"Diploma teknis, advertise MyCareerFuture 14 hari, levy S$650"},
+     {n:"Employment Pass (EP)",t:"Profesional/eksekutif",d:"2-3 tahun renewable, PR pathway",q:"Tidak ada DRC; min S$5.600 umum",s:"Min S$5.600/bulan",r:"Bachelor+, COMPASS 40+ poin"},
+     {n:"MDW (Migrant Domestic Worker)",t:"Asisten rumah tangga",d:"2 tahun renewable",q:"~290K+ MDW",s:"Min S$600/bulan negotiated",r:"Health, agency, employer income S$3K+"}
+   ],
+   sektor:"Construction, Manufacturing, Marine Shipyard, Process, Services + Domestic",
+   indoMOU:"MoU MDW; bilateral training konstruksi/marine",
+   keyJobs:["MDW","Construction (welder, fitter)","Shipyard worker","F&B service","Cleaner"],
+   challenges:"DRC ketat, levy tinggi, no PR pathway WP"
+  },
+  {code:"AU",name:"Australia",flag:"🇦🇺",region:"Oseania",pmi:1500,rank:12,salary:"Rp50-100 juta",lang:"IELTS 5.0+",visa:"Skills in Demand 482",quota:"Tidak ada quota num.",
+   visaTypes:[
+     {n:"Skills in Demand 482 - Core Skills",t:"Pekerja terampil di Core Skills Occupation List",d:"4 tahun, jalur PR setelah 2 tahun (Subclass 186)",q:"Tidak ada quota; LMT wajib; 456 okupasi CSOL",s:"Min CSIT AUD 73.150/tahun",r:"Job offer + sponsor, 1+ tahun pengalaman, IELTS 5.0, skill assessment"},
+     {n:"Skills in Demand - Specialist",t:"Profesional spesialis (NOT trades)",d:"4 tahun",q:"Processing 7 hari",s:"Min AUD 141.210/tahun",r:"Tidak ada occupation list, salary tinggi"},
+     {n:"Skills in Demand - Essential (2026)",t:"Sektor esensial low-wage",d:"TBD",q:"Akan diumumkan 2026",s:"Below CSIT",r:"TBD - via labour agreement"},
+     {n:"Working Holiday 462",t:"Backpacker muda + kerja sambilan",d:"1 tahun renewable",q:"5.000/tahun untuk Indonesia",s:"Award rates",r:"Usia 18-30, S1, IELTS 4.5+, dana AUD 5K+"}
+   ],
+   sektor:"Healthcare, ICT, Construction & Trades, Engineering, Hospitality, Childcare (NEW), Aged Care",
+   indoMOU:"IA-CEPA kerangka 482; PALM tidak berlaku Indonesia",
+   keyJobs:["Childcare worker (NEW 2024)","Aged care worker","Cook/Chef","Mechanic","Welder","Hospitality"],
+   challenges:"Skill assessment ketat, IELTS, biaya tinggi, English dominance"
+  },
+  {code:"DE",name:"Jerman",flag:"🇩🇪",region:"Eropa",pmi:850,rank:25,salary:"Rp40-75 juta",lang:"German A2-B2",visa:"Fachkräfte + Chancenkarte",quota:"Tidak ada quota",
+   visaTypes:[
+     {n:"Skilled Worker Visa (Fachkräfte)",t:"Pekerja vokasi 2+ tahun pelatihan diakui",d:"4 tahun, PR setelah 2 tahun (21 bulan B1)",q:"Tidak ada quota; demand 400K skilled/tahun",s:"Market rate ~€2.500-4.500/bulan",r:"Pelatihan vokasi 2+ tahun ZAB-recognized, kontrak, A2 German min"},
+     {n:"EU Blue Card",t:"Lulusan PT untuk high-skilled",d:"4 tahun, PR 21-33 bulan",q:"Tidak ada quota",s:"€50.700/tahun (2026); €45.934 shortage occupations",r:"Bachelor degree, kontrak high-skilled"},
+     {n:"Chancenkarte (Opportunity Card)",t:"Job-seeker visa points-based",d:"12 bulan",q:"11.497 visa terbit (Juni 2024-Juni 2025); India 32%",s:"Saat job-seeking max 20 jam/minggu",r:"Vokasi 2+ tahun ATAU bachelor; A1 German ATAU B2 English; 6+ poin"},
+     {n:"Ausbildung (Vocational Training)",t:"Magang vokasi 3 tahun",d:"3 tahun training + work post-graduation",q:"Open",s:"€800-1.200/bulan stipend",r:"B1 German, kontrak pelatihan"}
+   ],
+   sektor:"Healthcare/nursing, IT, Construction trades, Hospitality, Manufacturing, Automotive, Electricians, Welders",
+   indoMOU:"Triple Win Programme (perawat); G2G nursing pilot",
+   keyJobs:["Nurse/Pflegekraft","Caregiver","Mechatronics technician","Welder","Hotel/restaurant trades","Bakers/butchers"],
+   challenges:"Bahasa Jerman B1/B2, ZAB recognition lambat, biaya pelatihan, kompetisi global"
+  },
+  {code:"IT",name:"Italia",flag:"🇮🇹",region:"Eropa",pmi:3535,rank:20,salary:"Rp22-35 juta",lang:"Italiano A2-B1",visa:"Decreto Flussi",quota:"164.850 (2026)",
+   visaTypes:[
+     {n:"Decreto Flussi - Lavoro Subordinato Stagionale",t:"Pertanian, peternakan, pariwisata seasonal",d:"Max 9 bulan; multi-year",q:"88.000 (2026); 47K agriculture via konfederasi",s:"Sesuai CCNL sektoral",r:"Job offer + nulla osta, click day, MoU prioritas"},
+     {n:"Decreto Flussi - Lavoro Non Stagionale",t:"Pekerja tetap industri (incl. caregiver)",d:"1-2 tahun renewable, jalur PR",q:"76.850 (2026); 13.600 colf/badanti",s:"Sesuai CCNL",r:"Job offer pre-existing, click day, employer sponsor"},
+     {n:"EU Blue Card",t:"High-skilled professionals",d:"2 tahun renewable",q:"Out of quota",s:"Min €33.500/tahun",r:"Bachelor degree, kontrak, 1.5x average salary"}
+   ],
+   sektor:"Agriculture (47K seasonal), Tourism, Construction, Transport, Manufacturing, F&B, Healthcare, Caregiving (13.6K)",
+   indoMOU:"Indonesia disebut prioritas Decreto Flussi 2026-2028 (pending bilateral)",
+   keyJobs:["Caregiver (badanti)","Domestic worker (colf)","Agriculture worker","Hospitality","Cook"],
+   challenges:"Click day kompetitif, bahasa Italia, konversi <10% kuota jadi visa"
+  },
+  {code:"NL",name:"Belanda",flag:"🇳🇱",region:"Eropa",pmi:850,rank:30,salary:"Rp75-100 juta",lang:"English fluent",visa:"HSM + GVVA",quota:"Tidak ada quota",
+   visaTypes:[
+     {n:"Highly Skilled Migrant (Kennismigrant)",t:"Profesional terampil tinggi",d:"5 tahun (kontrak)",q:"Tidak ada quota",s:"€5.688/bulan (30+); €4.171 (<30); €2.989 (recent grad)",r:"Job offer recognized sponsor, salary threshold"},
+     {n:"GVVA (Single Permit)",t:"Pekerja non-EU >90 hari (sangat ketat)",d:">90 hari",q:"Labour market test EU-wide",s:"Sesuai market",r:"Labour market test, kontrak, sponsor"},
+     {n:"EU Blue Card",t:"High-skilled profesional",d:"5 tahun",q:"Tidak ada quota",s:"€5.688/bulan threshold",r:"Bachelor degree, kontrak high-skilled"},
+     {n:"Seasonal Work Permit (TWV)",t:"Pertanian musiman terbatas",d:"Max 24 minggu",q:"Sesuai UWV; sangat terbatas",s:"Min wage Belanda",r:"Tidak ada workers EU"}
+   ],
+   sektor:"IT, Engineering (HSM), Maritime/Shipping, Healthcare (limited)",
+   indoMOU:"Bilateral health worker (perawat) program, sangat terbatas",
+   keyJobs:["Highly skilled IT","Engineering","Nursing (limited)","Maritime/Shipping"],
+   challenges:"Labour market test ketat, GVVA hampir mustahil untuk vokasi"
+  },
+  {code:"TR",name:"Turki",flag:"🇹🇷",region:"Eropa",pmi:2630,rank:10,salary:"Rp4-20 juta",lang:"Turkish dasar",visa:"Çalışma İzni",quota:"5:1 ratio",
+   visaTypes:[
+     {n:"Work Permit (Çalışma İzni)",t:"Pekerja umum termasuk vokasi",d:"1 tahun renewable",q:"Rasio 5 lokal:1 asing per perusahaan",s:"~5x min wage profesional, ~1.5x skilled",r:"Sponsor employer, modal sahip TRY 100K, izin MLSS"},
+     {n:"Turquoise Card (Turkuaz Kart)",t:"Highly qualified professionals + entrepreneurs",d:"Indefinite (3 tahun probation)",q:"Selektif",s:"Tidak ada minimum",r:"Prestasi, kontribusi ekonomi"},
+     {n:"Independent Work Permit",t:"Self-employed setelah 5 tahun",d:"Indefinite",q:"N/A",s:"Self-funded",r:"5 tahun work permit, modal"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir, nanny",d:"1 tahun",q:"Bilateral G2G (Indonesia salah satu)",s:"~$300-500/bulan",r:"Sponsor keluarga Turki"}
+   ],
+   sektor:"Konstruksi, Hospitality, Healthcare, Manufacturing, Domestic services",
+   indoMOU:"G2G domestic worker; spike Turki sebagai destinasi PMI sejak 2023",
+   keyJobs:["Domestic helper","Caregiver","Hospitality","F&B"],
+   challenges:"Inflasi tinggi (lira melemah), bahasa Turki, gaji riil rendah"
+  },
+  {code:"SA",name:"Arab Saudi",flag:"🇸🇦",region:"GCC",pmi:7759,rank:5,salary:"Rp6-50 juta",lang:"Arabic/English",visa:"3-Tier System",quota:"Saudization (Nitaqat)",
+   visaTypes:[
+     {n:"Employment Visa - High-Skilled (Tier 1)",t:"Profesional/eksekutif (engineers, doctors, IT)",d:"1 tahun renewable, Iqama",q:"Sistem klasifikasi baru efektif Juli/Agustus 2025; occupational groups 1-3",s:"Tinggi, threshold per sektor",r:"Education, experience, professional accreditation, points-based"},
+     {n:"Employment Visa - Skilled (Tier 2)",t:"Teknisi, supervisor, administrasi",d:"1 tahun renewable, Iqama",q:"Lihat Saudization (Nitaqat) ratios; groups 4-6",s:"Mid-tier",r:"Pelatihan vokasi, sertifikat, pengalaman"},
+     {n:"Employment Visa - Basic (Tier 3)",t:"Pekerja manual labor",d:"1 tahun renewable, Iqama",q:"Age cap 60 tahun; groups 7-9",s:"Lower-tier",r:"Health, basic skills"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir keluarga",d:"2 tahun",q:"Sangat besar, ratusan ribu setahun",s:"SAR 1.500-2.000/bulan",r:"Sponsor keluarga Saudi, MoU bilateral"},
+     {n:"Premium Residency",t:"Long-term tanpa sponsor",d:"Permanent atau renewable",q:"Selektif",s:"N/A",r:"Investment SAR 800K+ ATAU profesional unggul"},
+     {n:"Temporary Work Visit Visa (TWVV)",t:"Project-based 90 hari",d:"Max 90 hari multi-entry",q:"Employer beli kuota",s:"Project rate",r:"Employer sponsor, project tertentu"}
+   ],
+   sektor:"Vision 2030 mega-projects (NEOM, Red Sea), Healthcare, Construction, Hospitality, Domestic",
+   indoMOU:"MoU bilateral (haji workers, healthcare); Vision 2030 Saudization",
+   keyJobs:["Domestic helper","Driver","Caregiver","Construction","Hospitality (NEOM)"],
+   challenges:"Kafala (sedang reform), Saudization (Nitaqat), klasifikasi 3-tier baru 2025"
+  },
+  {code:"AE",name:"UAE",flag:"🇦🇪",region:"GCC",pmi:4200,rank:8,salary:"Rp7-65 juta",lang:"English/Arabic",visa:"4-Tier MOHRE",quota:"Emiratisation 50+ employee",
+   visaTypes:[
+     {n:"Standard Employment Visa (MOHRE)",t:"Pekerja semua skill level (4 kategori)",d:"2 tahun (3 untuk skilled), Emirates ID",q:"Tidak ada quota; Emiratisation untuk perusahaan 50+",s:"Skill Level 1: AED 4K+; Level 4: AED 2.5K+",r:"Job offer, MOHRE skill class, medical, biometric"},
+     {n:"Green Visa (5-Year Self-Sponsored)",t:"Skilled professional/freelancer",d:"5 tahun renewable",q:"Tidak ada quota",s:"Min AED 15K/bulan",r:"Bachelor degree, skill level 1-3, gaji"},
+     {n:"Golden Visa (10-Year)",t:"Investor, entrepreneur, talenta",d:"10 tahun renewable",q:"Selektif",s:"Min AED 30K/bulan",r:"Investment AED 2M ATAU specialized talent"},
+     {n:"Domestic Worker Visa (Tadbeer)",t:"PRT, sopir, nanny",d:"2 tahun",q:"Tidak terbatas via Tadbeer",s:"AED 1.5-3K/bulan",r:"Sponsor income AED 25K+, akomodasi, agency Tadbeer"},
+     {n:"Mission Visa (Project)",t:"Pekerja proyek temporer",d:"Short-term",q:"Project-based",s:"Project rate",r:"Employer mission visa application"}
+   ],
+   sektor:"Hospitality, Construction, Healthcare, Domestic, IT, Services",
+   indoMOU:"Bilateral domestic worker; Indonesia Investment Authority partnership",
+   keyJobs:["Domestic helper","Driver","Hospitality (Dubai)","Construction","Healthcare","Beauty/Salon"],
+   challenges:"Kafala system; biaya hidup tinggi; persaingan dengan Filipina/India"
+  },
+  {code:"QA",name:"Qatar",flag:"🇶🇦",region:"GCC",pmi:1800,rank:13,salary:"Rp5-50 juta",lang:"English/Arabic",visa:"Work Residence Permit",quota:"Qatarization",
+   visaTypes:[
+     {n:"Work Residence Permit (RP)",t:"Pekerja semua level",d:"1-3 tahun renewable",q:"Tidak ada quota numerik; Qatarization",s:"Bervariasi (post-WC reforms)",r:"Job offer, sponsor, medical, biometric, kontrak MOL approved"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir, nanny",d:"2 tahun",q:"Tidak terbatas",s:"QAR 1.000-2.000/bulan",r:"Sponsor keluarga Qatar"},
+     {n:"Project-Based Visa",t:"Konstruksi/proyek besar",d:"Sesuai project",q:"Project employer-based",s:"Project rates",r:"Project sponsor"}
+   ],
+   sektor:"Konstruksi (Lusail, Education City), Hospitality, Healthcare, Services post-World Cup",
+   indoMOU:"Bilateral, terutama domestic worker dan healthcare",
+   keyJobs:["Domestic helper","Hospitality","Healthcare (nurse)","Construction","Driver"],
+   challenges:"Kafala (reformed 2017+ WC), bahasa, biaya tinggi"
+  },
+  {code:"BH",name:"Bahrain",flag:"🇧🇭",region:"GCC",pmi:600,rank:15,salary:"Rp4-40 juta",lang:"English/Arabic",visa:"LMRA + Flexi",quota:"Bahrainization",
+   visaTypes:[
+     {n:"Standard Work Visa (LMRA)",t:"Pekerja semua level",d:"2 tahun renewable",q:"Bahrainization quota per sektor",s:"Bervariasi",r:"LMRA work permit, sponsor, medical"},
+     {n:"Flexi Work Permit (UNIQUE)",t:"Self-sponsored, switch employer",d:"1-2 tahun",q:"Selektif",s:"Self-arranged",r:"Existing residency, fee BHD 200/tahun"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir",d:"2 tahun",q:"Tidak terbatas",s:"BHD 100-150/bulan",r:"Sponsor keluarga"}
+   ],
+   sektor:"Banking, Hospitality, Manufacturing, Construction, Domestic",
+   indoMOU:"Bilateral domestic worker (limited)",
+   keyJobs:["Domestic helper","Hospitality","Healthcare","Beauty/Salon"],
+   challenges:"Pasar kecil, dominansi Asia Selatan"
+  },
+  {code:"KW",name:"Kuwait",flag:"🇰🇼",region:"GCC",pmi:550,rank:18,salary:"Rp3-35 juta",lang:"English/Arabic",visa:"Article 18 + 20",quota:"Kuwaitization",
+   visaTypes:[
+     {n:"Article 18 Work Visa (Private)",t:"Pekerja sektor swasta",d:"1-3 tahun renewable",q:"Kuwaitization (target lokal)",s:"Bervariasi",r:"Sponsor private, kontrak, medical, fee KWD 150 (Jan 2025)"},
+     {n:"Article 17 Work Visa (Government)",t:"Sektor pemerintah",d:"Sesuai kontrak",q:"Government allocation",s:"Government scale",r:"Sponsor instansi pemerintah, residency form"},
+     {n:"Visa 20 - Domestic Worker",t:"PRT, sopir, koki",d:"2 tahun",q:"Tidak terbatas",s:"KWD 60-100/bulan",r:"Sponsor citizen, salary cert, lease"}
+   ],
+   sektor:"Lintas; private/public; domestic dominan",
+   indoMOU:"Indonesia masih moratorium PRT ke Kuwait sejak 2009",
+   keyJobs:["Healthcare (nurse)","Hospitality","Construction"],
+   challenges:"Moratorium PRT, biaya & gaji rendah, Kuwaitization"
+  },
+  {code:"CA",name:"Kanada",flag:"🇨🇦",region:"Amerika",pmi:700,rank:20,salary:"Rp45-80 juta",lang:"IELTS CLB 4-5",visa:"TFWP + FSTP",quota:"82K (2025)",
+   visaTypes:[
+     {n:"TFWP - High-Wage Stream",t:"Pekerja >median wage provinsi",d:"1-2 tahun (max 4 tahun cumulative)",q:"Target 82K (2025); sudah terlampaui",s:"Diatas median wage provinsi",r:"Positive LMIA, IELTS, kontrak"},
+     {n:"TFWP - Low-Wage Stream",t:"Pekerja <median wage",d:"Max 1 tahun (recent reforms)",q:"10% cap workforce per perusahaan",s:"Below median",r:"Positive LMIA, akomodasi disediakan"},
+     {n:"TFWP - Agricultural Stream",t:"Buruh tani non-seasonal",d:"Max 2 tahun",q:"Sektor prioritas; LMIA exemption parsial",s:"Above provincial min wage",r:"On-farm primary agriculture, NOC tertentu"},
+     {n:"Federal Skilled Trades (FSTP)",t:"Tukang vokasi PR pathway",d:"PR (permanent residency)",q:"Selektif via Express Entry (CRS 350-450)",s:"Bervariasi; offer 1+ tahun ATAU sertifikat Kanada",r:"2+ tahun pengalaman, NOC TEER 2-3, IELTS CLB 5/4, sertifikat"},
+     {n:"Caregiver Program",t:"Caregiver dengan PR pathway",d:"PR pathway after 2 tahun",q:"2.750/year (closed, akan reopen)",s:"Above min wage",r:"1+ tahun pengalaman, CLB 5, secondary school"}
+   ],
+   sektor:"Healthcare, Construction, Trades, Agriculture, Caregiving, Hospitality",
+   indoMOU:"Limited bilateral; Atlantic Immigration Program peluang",
+   keyJobs:["Caregiver","Cook/Chef","Welder","Mechanic","Healthcare aide","Truck driver"],
+   challenges:"LMIA proses lambat, IELTS CLB requirements, biaya tinggi, jauh"
+  }
+];;
+
+// REPORT B — Country deep dive
+const dataB = [{"code":"JP","name":"Jepang","flag":"🇯🇵","overview":"Jepang menghadapi krisis demografi terparah di dunia: 30,2% populasi berusia 65+, kelahiran turun 5,1% (2023). Defisit tenaga kerja struktural di sektor vokasi memaksa pemerintah membuka pintu untuk 800.000 SSW workers pada 2029.","skilledNeed":"Kebutuhan skilled vokasi: 800.000 SSW pada 2029 (target nasional). Per Jan 2025: 284.466 sudah masuk. Defisit terbesar di nursing care, construction, food service, manufacturing, agriculture.","demand":[{"family":"Caregiving & Healthcare","type":"Nursing care (Kaigo)","role":"Nursing care worker (SSW)","demand":135000,"fulfilled":24500,"gap":110500,"indonesianShare":"15%","topSource":"Vietnam, Indonesia, Filipina","req":"JLPT N4, Kaigo Skills Test, age 18+, sertifikat caregiver"},{"family":"Construction & Trades","type":"Building Construction","role":"General construction worker (SSW)","demand":80000,"fulfilled":34200,"gap":45800,"indonesianShare":"22%","topSource":"Vietnam (#1), Indonesia, Myanmar","req":"JLPT N4, Construction Skills Test, age 18+"},{"family":"Manufacturing & Industrial","type":"Industrial Products Manufacturing","role":"Manufacturing operator (SSW)","demand":62000,"fulfilled":31100,"gap":30900,"indonesianShare":"18%","topSource":"Vietnam, Indonesia, Filipina","req":"JLPT N4, Manufacturing Skills Test, no degree required"},{"family":"Hospitality & Food Service","type":"Food Service","role":"Restaurant staff/Cook (SSW)","demand":53000,"fulfilled":14800,"gap":38200,"indonesianShare":"20%","topSource":"Vietnam, Indonesia, Nepal","req":"JLPT N4, Food Service Skills Test"},{"family":"Hospitality & Food Service","type":"Accommodation","role":"Hotel staff/Concierge (SSW)","demand":22000,"fulfilled":5400,"gap":16600,"indonesianShare":"12%","topSource":"Vietnam, Filipina, Indonesia","req":"JLPT N4, Accommodation Skills Test"},{"family":"Agriculture & Fisheries","type":"Agriculture","role":"Farm worker (SSW)","demand":36500,"fulfilled":18200,"gap":18300,"indonesianShare":"25%","topSource":"Vietnam, Indonesia, Cambodia","req":"JLPT N4, Agriculture Skills Test"},{"family":"Agriculture & Fisheries","type":"Fisheries","role":"Fisheries worker (SSW)","demand":9000,"fulfilled":4100,"gap":4900,"indonesianShare":"30%","topSource":"Indonesia, Vietnam, Filipina","req":"JLPT N4, Fisheries Skills Test"},{"family":"Automotive & Maintenance","type":"Auto Maintenance/Aviation/Railway","role":"Auto mechanic, aviation ground, railway tech (SSW)","demand":21500,"fulfilled":8200,"gap":13300,"indonesianShare":"10%","topSource":"Vietnam, Filipina, Indonesia","req":"JLPT N4, Sector Skills Test, technical experience"},{"family":"Cleaning & Building Services","type":"Building Cleaning","role":"Building cleaning worker (SSW)","demand":37000,"fulfilled":13600,"gap":23400,"indonesianShare":"14%","topSource":"Vietnam, Filipina, Indonesia","req":"JLPT N4, Building Cleaning Skills Test"}],"competitiveLandscape":"Vietnam dominan (#1: 133.478 SSW). Indonesia #2 (53.538). Filipina #3 (28.234). Myanmar, Nepal naik cepat. Indonesia perlu accelerate untuk mencapai target 100.000 (5 tahun) per MoC 2023.","fulfillmentRate":"36% rata-rata sektoral (target 800K vs eksisting 284K = 36%)"},{"code":"KR","name":"Korea Selatan","flag":"🇰🇷","overview":"Korea Selatan memerlukan tenaga kerja blue-collar untuk SME yang tidak diminati oleh pekerja Korea. Namun, kuota turun signifikan: 165.000 (2024) → 130.000 (2025) → 80.000 (2026) karena demand pasca-COVID melandai dan jobs vacancy turun di manufacturing/construction.","skilledNeed":"Demand skilled vokasi: 80.000 (E-9 quota 2026) + 33.000 (E-7-4 upgrade) + 75.000 (E-8 seasonal) = ~188.000 slots/tahun. Indonesia hanya menempati ~6% dari total slot E-9.","demand":[{"family":"Manufacturing & Industrial","type":"SME Manufacturing","role":"Factory worker/Machine operator (E-9)","demand":72000,"fulfilled":48000,"gap":24000,"indonesianShare":"7%","topSource":"Vietnam, Cambodia, Filipina, Thailand, Indonesia","req":"EPS-TOPIK 80+/200, age 18-39, skills test"},{"family":"Manufacturing & Industrial","type":"Shipbuilding","role":"Welder/Painter shipyard (E-9 special)","demand":5000,"fulfilled":2800,"gap":2200,"indonesianShare":"15%","topSource":"Vietnam, Indonesia, Filipina","req":"EPS-TOPIK + welding cert"},{"family":"Construction & Trades","type":"Construction","role":"Construction worker (E-9)","demand":11000,"fulfilled":7500,"gap":3500,"indonesianShare":"5%","topSource":"Vietnam, Filipina, Cambodia","req":"EPS-TOPIK, physical fitness"},{"family":"Agriculture & Fisheries","type":"Agriculture","role":"Farm worker (E-9 + E-8 seasonal)","demand":13000,"fulfilled":9800,"gap":3200,"indonesianShare":"8%","topSource":"Vietnam, Cambodia, Thailand","req":"EPS-TOPIK (E-9); G2G pemda (E-8)"},{"family":"Agriculture & Fisheries","type":"Fisheries","role":"Fishing crew/Deckhand (E-9 + E-10)","demand":8000,"fulfilled":5400,"gap":2600,"indonesianShare":"35%","topSource":"Indonesia (#1 fisheries), Vietnam, Filipina","req":"EPS-TOPIK, fisheries certification"},{"family":"Caregiving & Healthcare","type":"Domestic Care (Pilot)","role":"Childcare/Housekeeping (E-9 Pilot)","demand":1200,"fulfilled":300,"gap":900,"indonesianShare":"50%","topSource":"Filipina, Indonesia (pilot)","req":"TESDA cert, age 24-38, no dependents"},{"family":"Manufacturing & Industrial","type":"Skilled Upgrade","role":"Skilled mid-level worker (E-7-4)","demand":33000,"fulfilled":21000,"gap":12000,"indonesianShare":"10%","topSource":"Vietnam, Filipina, Indonesia","req":"4+ years E-9/E-10/H-2, K-Point 200+/300, salary ≥ ₩26M/year"}],"competitiveLandscape":"Vietnam dominan di Korea (~30% E-9). Indonesia turun dari peak. Filipina, Cambodia, Thailand kompetitor utama. India bergabung 2023.","fulfillmentRate":"~75% rata-rata (high demand sektor agriculture/fisheries; lebih rendah di manufacturing yang melandai)"},{"code":"TW","name":"Taiwan","flag":"🇹🇼","overview":"Taiwan menjadi tujuan #1 PMI dengan 84.581 penempatan (2024). 858.939 migrant workers per Sep 2025 (+110.000 dari 2 tahun lalu). Indonesia mendominasi caregiver sector. Industri Taiwan butuh 30%+ migrant labor di manufaktur tertentu.","skilledNeed":"Demand skilled: ~30.000 caregiver baru/tahun + ~15.000 manufacturing operator + ~10.000 construction. Total ~60.000+ slot terbuka untuk Indonesia/tahun.","demand":[{"family":"Caregiving & Healthcare","type":"Live-in Caregiver","role":"Elder/disabled live-in caregiver","demand":215000,"fulfilled":185000,"gap":30000,"indonesianShare":"75%","topSource":"Indonesia (#1), Filipina, Vietnam","req":"TESDA-equivalent caregiver cert, dasar Mandarin"},{"family":"Caregiving & Healthcare","type":"Institutional Caregiver","role":"Nursing home/hospital caregiver","demand":35000,"fulfilled":28000,"gap":7000,"indonesianShare":"60%","topSource":"Indonesia, Filipina, Vietnam","req":"Caregiver cert, dasar Mandarin, LSA-protected"},{"family":"Manufacturing & Industrial","type":"Electronics Assembly","role":"Electronics line worker","demand":120000,"fulfilled":95000,"gap":25000,"indonesianShare":"30%","topSource":"Vietnam, Indonesia, Filipina, Thailand","req":"Health, broker contract, dasar Mandarin"},{"family":"Manufacturing & Industrial","type":"Machinery","role":"Machine operator/CNC","demand":45000,"fulfilled":32000,"gap":13000,"indonesianShare":"35%","topSource":"Vietnam, Indonesia, Thailand","req":"Skills test, dasar Mandarin"},{"family":"Construction & Trades","type":"Construction","role":"General laborer/finisher","demand":28000,"fulfilled":18000,"gap":10000,"indonesianShare":"20%","topSource":"Vietnam, Thailand, Filipina, Indonesia","req":"Health, physical fitness"},{"family":"Agriculture & Fisheries","type":"Slaughterhouse","role":"Slaughterhouse operator","demand":5000,"fulfilled":3200,"gap":1800,"indonesianShare":"15%","topSource":"Vietnam, Filipina, Indonesia","req":"Health, broker"},{"family":"Agriculture & Fisheries","type":"Distant-Water Fisheries","role":"Fishing crew (offshore)","demand":18000,"fulfilled":14500,"gap":3500,"indonesianShare":"70%","topSource":"Indonesia (#1 distant-water), Filipina, Vietnam","req":"BST cert, fishing experience"},{"family":"Skilled Upgrade","type":"Mid-Level Skilled","role":"Intermediate skilled foreign worker (Manufacturing)","demand":25000,"fulfilled":8500,"gap":16500,"indonesianShare":"25%","topSource":"Vietnam, Filipina, Indonesia","req":"6+ years TW, gaji NT$33K+, sertifikat profesional"}],"competitiveLandscape":"Indonesia mendominasi caregiver (75%) dan distant-water fisheries (70%). Vietnam mendominasi manufacturing. Filipina dominan institutional caregiver Inggris-speaking.","fulfillmentRate":"~85% caregiver, 75% manufacturing, 65% construction"},{"code":"HK","name":"Hong Kong","flag":"🇭🇰","overview":"Hong Kong menampung 99.773 PMI (2024) yang turun ~24% jadi 76.157 (2025), 95%+ adalah PRT (FDH). Pemerintah HK membuka 5 skema labour importation baru untuk diversifikasi: ESLS (9.056 aktif), CSS (12.000), Transport (8.000), TPL (10.000 pilot).","skilledNeed":"Demand non-domestic: ~30.000 quota slots aktif (CSS+ESLS+Transport+TPL). Indonesia hanya memenuhi ~5% dari quota non-FDH ini.","demand":[{"family":"Domestic Services","type":"Foreign Domestic Helper","role":"FDH (PRT)","demand":380000,"fulfilled":370000,"gap":10000,"indonesianShare":"40%","topSource":"Filipina (50%), Indonesia (40%), Thailand","req":"Domestic helper cert, Cantonese/English dasar, kontrak SEC"},{"family":"Construction & Trades","type":"Construction Trades","role":"Bar bender, scaffolder, formworker","demand":12000,"fulfilled":8500,"gap":3500,"indonesianShare":"3%","topSource":"Mainland China, Indonesia (rising), Vietnam","req":"Trade test, principal contractor proyek HK$1B+"},{"family":"Hospitality & Food Service","type":"Catering (ESLS)","role":"Junior cook, waiter, kitchen helper","demand":6000,"fulfilled":3500,"gap":2500,"indonesianShare":"8%","topSource":"Mainland China, Filipina, Indonesia","req":"SEC, manning ratio 1:2, employer rekrut lokal 6 minggu"},{"family":"Hospitality & Food Service","type":"Retail/Hospitality (ESLS)","role":"Sales, cashier, waiter senior","demand":3000,"fulfilled":1800,"gap":1200,"indonesianShare":"5%","topSource":"Mainland China, Filipina, Thailand","req":"SEC, ESLS approval"},{"family":"Automotive & Maintenance","type":"Transport - Aviation","role":"Aviation ground handler","demand":6300,"fulfilled":4200,"gap":2100,"indonesianShare":"5%","topSource":"Mainland China, Filipina","req":"Aviation training, licensing"},{"family":"Automotive & Maintenance","type":"Transport - PLB/Coach","role":"Public light bus/coach driver","demand":1700,"fulfilled":1100,"gap":600,"indonesianShare":"<2%","topSource":"Mainland China","req":"SIM non-lokal 1+ tahun, lulus driving test HK"},{"family":"Skilled Vocational","type":"Technical Professional (Pilot)","role":"Skilled trades non-degree","demand":10000,"fulfilled":1200,"gap":8800,"indonesianShare":"<5%","topSource":"Mainland China, ASEAN","req":"Usia 18-40, sertifikasi trade"}],"competitiveLandscape":"FDH: Filipina dominan (50%), Indonesia kedua (40%). Untuk skilled non-domestic, Mainland China dominan karena kedekatan & bahasa. Indonesia perlu posisi sebagai supplier alternatif untuk ESLS/CSS/TPL.","fulfillmentRate":"FDH 97% (jenuh); ESLS/CSS 60-70% (peluang)"},{"code":"SG","name":"Singapura","flag":"🇸🇬","overview":"Singapura menampung ~1,4 juta foreign workers. Indonesia hanya 10.819 (2024), didominasi MDW. WP konstruksi/marine/process butuh terus pekerja Indonesia. S Pass min naik ke S$3.300 per Sep 2025.","skilledNeed":"Demand: WP ~600.000 (semua sumber); S Pass ~180.000; EP ~190.000. Indonesia perlu meningkatkan share di WP (saat ini ~5%) terutama konstruksi.","demand":[{"family":"Domestic Services","type":"MDW","role":"Migrant Domestic Worker","demand":300000,"fulfilled":290000,"gap":10000,"indonesianShare":"15%","topSource":"Filipina (#1), Myanmar, Indonesia","req":"Health, agency-sourced, employer income S$3K+"},{"family":"Construction & Trades","type":"Construction (WP)","role":"Construction laborer/skilled trades","demand":380000,"fulfilled":340000,"gap":40000,"indonesianShare":"5%","topSource":"Bangladesh, India, Mainland China, Myanmar","req":"DRC 83.3%, source country approved (Indonesia ya), levy"},{"family":"Manufacturing & Industrial","type":"Manufacturing (WP)","role":"Factory operator","demand":65000,"fulfilled":54000,"gap":11000,"indonesianShare":"6%","topSource":"Bangladesh, Mainland China, Myanmar","req":"DRC 60%, levy"},{"family":"Manufacturing & Industrial","type":"Marine Shipyard (WP)","role":"Welder, fitter, painter shipyard","demand":55000,"fulfilled":48000,"gap":7000,"indonesianShare":"15%","topSource":"India, Mainland China, Indonesia, Bangladesh","req":"DRC 77.8%, trade certs, levy"},{"family":"Manufacturing & Industrial","type":"Process Industries","role":"Process operator (oil/gas/petchem)","demand":25000,"fulfilled":21000,"gap":4000,"indonesianShare":"10%","topSource":"India, Indonesia, Mainland China","req":"DRC, technical training"},{"family":"Hospitality & Food Service","type":"Services (WP)","role":"F&B, retail, hospitality","demand":80000,"fulfilled":62000,"gap":18000,"indonesianShare":"4%","topSource":"Mainland China, Malaysia, Filipina","req":"DRC 35%, levy"},{"family":"Skilled Vocational","type":"S Pass (Mid-Skilled)","role":"Technicians, supervisors","demand":180000,"fulfilled":165000,"gap":15000,"indonesianShare":"3%","topSource":"India, Filipina, Mainland China","req":"Diploma, S$3.300+/bulan, COMPASS, levy S$650"},{"family":"Skilled Vocational","type":"NTS Occupation List (NEW Sep 2025)","role":"Heavy vehicle drivers, cooks, manufacturing positions","demand":30000,"fulfilled":8000,"gap":22000,"indonesianShare":"5%","topSource":"NEW expansion: Bhutan, Cambodia, Laos + existing","req":"NTS list, sektor-spesifik"}],"competitiveLandscape":"Bangladesh dominan konstruksi & manufaktur. India dominan S Pass dan marine. Filipina dominan MDW dan F&B. Indonesia kuat di marine shipyard (welder).","fulfillmentRate":"WP 90% (jenuh dengan kompetitor); S Pass 92%; NTS Occupation List baru ~30% (peluang besar untuk Indonesia)"},{"code":"AU","name":"Australia","flag":"🇦🇺","overview":"Australia membuka pintu untuk skilled vokasi via Skills in Demand 482 (replaced TSS Dec 2024). 456 okupasi di Core Skills Occupation List. Childcare worker dan aged care ditambahkan untuk merespons krisis sektoral.","skilledNeed":"Demand skilled: ~150.000 visa 482/PR per tahun. Indonesia hanya menempati ~1.500 (1%). Peluang besar untuk trades, hospitality, healthcare.","demand":[{"family":"Caregiving & Healthcare","type":"Aged Care","role":"Aged care worker","demand":35000,"fulfilled":18000,"gap":17000,"indonesianShare":"<2%","topSource":"India, Filipina, Nepal","req":"Cert III/IV Aged Care, IELTS 5.0, skill assessment"},{"family":"Caregiving & Healthcare","type":"Childcare (NEW 2024)","role":"Early childhood educator","demand":18000,"fulfilled":9500,"gap":8500,"indonesianShare":"<1%","topSource":"Filipina, India, NZ","req":"Cert III Children's Services, IELTS 5.0, working with children check"},{"family":"Caregiving & Healthcare","type":"Nursing","role":"Registered/enrolled nurse","demand":28000,"fulfilled":23000,"gap":5000,"indonesianShare":"<3%","topSource":"India, UK, Filipina","req":"AHPRA registration, IELTS 7.0, skill assessment ANMAC"},{"family":"Construction & Trades","type":"Trades","role":"Carpenter, electrician, plumber, welder","demand":42000,"fulfilled":31000,"gap":11000,"indonesianShare":"<1%","topSource":"UK, NZ, India, Filipina","req":"Trade certificate skill assessment (TRA), IELTS 5.0"},{"family":"Hospitality & Food Service","type":"Cooks/Chefs","role":"Cook/Chef (Asian cuisine)","demand":15000,"fulfilled":9000,"gap":6000,"indonesianShare":"<3%","topSource":"India, Filipina, Vietnam, Thailand","req":"Cert IV Commercial Cookery, IELTS 5.0, 1+ year experience"},{"family":"Automotive & Maintenance","type":"Auto/Heavy Equipment","role":"Mechanic/Diesel mechanic","demand":7000,"fulfilled":5200,"gap":1800,"indonesianShare":"<2%","topSource":"UK, India, Filipina","req":"Cert III/IV, IELTS 5.0, skill assessment"},{"family":"Manufacturing & Industrial","type":"Manufacturing","role":"Production manager, technical","demand":8000,"fulfilled":6500,"gap":1500,"indonesianShare":"<2%","topSource":"India, China, UK","req":"Skill assessment, IELTS 5.0"}],"competitiveLandscape":"India dominan healthcare/IT/trades. Filipina dominan aged care. UK/NZ dominan trades. Indonesia underrepresented di hampir semua sektor 482.","fulfillmentRate":"~70% (gap besar terutama aged care, childcare, trades)"},{"code":"DE","name":"Jerman","flag":"🇩🇪","overview":"Jerman butuh 400.000 skilled workers/tahun. Demografi tertua di Eropa (rata2 47,8 tahun). Chancenkarte (Opportunity Card) baru sangat ramah lulusan vokasi. Adopsi Indonesia masih rendah (<5% Chancenkarte visa).","skilledNeed":"Demand 400.000/tahun untuk skilled workers. Indonesia hanya menempati <1.000/tahun. Peluang sangat besar.","demand":[{"family":"Caregiving & Healthcare","type":"Nursing/Pflegekraft","role":"Pflegefachkraft (nurse), Altenpfleger (caregiver)","demand":80000,"fulfilled":42000,"gap":38000,"indonesianShare":"<3%","topSource":"Filipina, Vietnam, Bosnia, Mexico, Brazil, India","req":"Pelatihan vokasi 2-3 tahun ZAB-recognized, B1-B2 German, BIG/Anerkennung"},{"family":"Construction & Trades","type":"Construction Trades","role":"Welder, electrician, plumber, carpenter","demand":55000,"fulfilled":32000,"gap":23000,"indonesianShare":"<1%","topSource":"Polandia, Turki, Romania, India","req":"Pelatihan vokasi 2-3 tahun, ZAB recognition, A2-B1 German"},{"family":"Manufacturing & Industrial","type":"Mechatronics/Industrial","role":"Mechatronics technician, machine operator","demand":42000,"fulfilled":28000,"gap":14000,"indonesianShare":"<1%","topSource":"India, China, Turki, Polandia","req":"Pelatihan vokasi 2-3 tahun, ZAB, A2 German"},{"family":"Hospitality & Food Service","type":"Hotel/Restaurant","role":"Cook/Chef, hotel staff, baker, butcher","demand":30000,"fulfilled":18000,"gap":12000,"indonesianShare":"<1%","topSource":"Vietnam, Filipina, Turki","req":"Pelatihan vokasi 2-3 tahun, B1 German preferred"},{"family":"Automotive & Maintenance","type":"Auto/Industrial Maintenance","role":"Auto mechanic, industrial maintenance","demand":18000,"fulfilled":13500,"gap":4500,"indonesianShare":"<1%","topSource":"Polandia, Turki, Romania","req":"Pelatihan vokasi 2-3 tahun, ZAB, A2 German"},{"family":"Skilled Vocational","type":"Chancenkarte (Opportunity Card)","role":"Job-seeker for vocational/academic","demand":50000,"fulfilled":11497,"gap":38503,"indonesianShare":"<5%","topSource":"India (32%), China, Turki, Pakistan, Tunisia, Mesir","req":"Vokasi 2+ tahun ATAU bachelor, A1 German ATAU B2 English, 6+ poin sistem"},{"family":"Skilled Vocational","type":"Ausbildung (Vocational Training)","role":"Vocational training apprentice","demand":35000,"fulfilled":8000,"gap":27000,"indonesianShare":"<2%","topSource":"Vietnam, Filipina, Bosnia, India","req":"B1 German, kontrak training perusahaan/sekolah vokasi"}],"competitiveLandscape":"Filipina dominan nursing (Triple Win Programme). India dominan IT/Chancenkarte. Vietnam aktif nursing. Indonesia sangat underrepresented; perlu agresif Chancenkarte campaign.","fulfillmentRate":"~52% (gap masif terutama nursing, trades, manufacturing)"},{"code":"IT","name":"Italia","flag":"🇮🇹","overview":"Decreto Flussi 2026-2028: 497.550 work permits dialokasikan; 164.850/tahun untuk 2026. Demand kuat: 88.000 seasonal (agriculture/tourism), 13.600 caregiver/domestic (colf/badanti), 76.850 non-seasonal employed. Indonesia disebutkan prioritas tetapi MoU belum optimal.","skilledNeed":"Demand: 164.850/tahun (2026). Indonesia 3.535 (2024) = 2,1%. Peluang besar di caregiver dan agriculture seasonal.","demand":[{"family":"Caregiving & Healthcare","type":"Domestic Care (Badanti/Colf)","role":"Live-in caregiver/domestic worker","demand":13600,"fulfilled":8500,"gap":5100,"indonesianShare":"6%","topSource":"Romania, Ukraina, Filipina, Peru, Maroko","req":"Italiano A2, kontrak family sponsor, click day"},{"family":"Agriculture & Fisheries","type":"Agriculture (Seasonal)","role":"Farm worker (seasonal)","demand":47000,"fulfilled":28000,"gap":19000,"indonesianShare":"3%","topSource":"Maroko, Albania, India, Tunisia, Senegal","req":"Click day, MoU prioritas, employer sponsor via konfederasi tani"},{"family":"Hospitality & Food Service","type":"Tourism/Hospitality (Seasonal)","role":"Hotel staff, waiter, kitchen","demand":41000,"fulfilled":25000,"gap":16000,"indonesianShare":"4%","topSource":"Albania, Maroko, Tunisia, Egypt","req":"Click day, Italian dasar, kontrak hotel/restoran"},{"family":"Construction & Trades","type":"Construction","role":"General laborer, mason, finisher","demand":15000,"fulfilled":9500,"gap":5500,"indonesianShare":"<2%","topSource":"Albania, Romania, Maroko, India","req":"Click day, Italian dasar, kontrak"},{"family":"Manufacturing & Industrial","type":"Manufacturing/Logistics","role":"Factory worker, warehouse, logistics","demand":18000,"fulfilled":11000,"gap":7000,"indonesianShare":"<2%","topSource":"India, Bangladesh, Pakistan, Sri Lanka","req":"Click day, Italian dasar"},{"family":"Automotive & Maintenance","type":"Transport","role":"Truck driver, logistics","demand":8000,"fulfilled":5200,"gap":2800,"indonesianShare":"<1%","topSource":"Albania, Romania, Ukraina","req":"SIM Italian/EU, click day"},{"family":"Hospitality & Food Service","type":"F&B Service","role":"Cook (Asian/Italian), restaurant staff","demand":5500,"fulfilled":3500,"gap":2000,"indonesianShare":"5%","topSource":"China, India, Pakistan, Bangladesh","req":"Italian dasar, kontrak"}],"competitiveLandscape":"Romania, Ukraina, Maroko dominan caregiver. Albania, Tunisia, Senegal dominan agriculture. India, Bangladesh, Pakistan dominan manufacturing. Indonesia perlu push bilateral untuk masuk daftar prioritas Decreto Flussi.","fulfillmentRate":"~62% rata-rata (low conversion 'click day' ke visa terbit ~10% pada 2024)"},{"code":"NL","name":"Belanda","flag":"🇳🇱","overview":"Belanda ketat akses untuk vokasi non-EU melalui GVVA (labour market test EU-wide). Pintu utama via Highly Skilled Migrant (Kennismigrant) untuk profesional. Akses untuk Indonesia sangat selektif; volume rendah tapi gaji tertinggi di Eropa.","skilledNeed":"Demand HSM: ~25.000/tahun. GVVA non-HSM hampir tertutup untuk vokasi. Total Indonesia ~850/tahun, dominan IT/engineering.","demand":[{"family":"Skilled Vocational","type":"Highly Skilled Migrant (Kennismigrant)","role":"IT, engineering, R&D","demand":25000,"fulfilled":23500,"gap":1500,"indonesianShare":"3%","topSource":"India, China, Turki, Brazil, AS","req":"Recognized sponsor, salary €5.688/bulan (30+), bachelor+"},{"family":"Caregiving & Healthcare","type":"Healthcare (Bilateral)","role":"Nurse, doctor","demand":8000,"fulfilled":6500,"gap":1500,"indonesianShare":"<2%","topSource":"Filipina, Italia, Polandia, India","req":"BIG registration, Dutch B2, bilateral program limited"},{"family":"Manufacturing & Industrial","type":"Maritime/Shipping","role":"Maritime engineer, ship technician","demand":5000,"fulfilled":3800,"gap":1200,"indonesianShare":"5%","topSource":"Polandia, Filipina, Indonesia, India","req":"STCW certificates, English, maritime experience"},{"family":"Hospitality & Food Service","type":"Asian Catering Cooks (TERMINATED)","role":"Asian specialty chef (legacy only, closed since 2022)","demand":0,"fulfilled":0,"gap":0,"indonesianShare":"N/A","topSource":"Legacy holders only","req":"Closed since 1 Jan 2022"},{"family":"Agriculture & Fisheries","type":"Seasonal (TWV)","role":"Greenhouse, fruit picker","demand":3500,"fulfilled":2800,"gap":700,"indonesianShare":"<1%","topSource":"Polandia, Romania, Ukraina (EU access)","req":"Tidak ada workers EU tersedia, sangat ketat"},{"family":"Construction & Trades","type":"GVVA Vocational","role":"Welder, technician (very rare)","demand":1000,"fulfilled":800,"gap":200,"indonesianShare":"<1%","topSource":"Polandia, Romania","req":"Labour market test EU-wide hampir mustahil dilewati"}],"competitiveLandscape":"India dominan HSM (IT). Filipina dominan healthcare. Polandia/Romania dominan blue-collar via mobilitas EU. Indonesia hanya bisa via HSM atau program bilateral khusus maritime.","fulfillmentRate":"HSM 94%; vokasi <80% (akses tertutup)"},{"code":"TR","name":"Turki","flag":"🇹🇷","overview":"Turki menjadi destinasi PMI baru (2.630 pada 2024, naik dari ~500 pada 2020). Bilateral G2G untuk domestic worker. Tantangan: inflasi tinggi (lira melemah), gaji riil rendah dalam IDR.","skilledNeed":"Demand mostly informal/semi-formal. Resmi terbatas. Indonesia masih bilateral pilot untuk PRT.","demand":[{"family":"Domestic Services","type":"Domestic Worker","role":"PRT, sopir, nanny","demand":15000,"fulfilled":8000,"gap":7000,"indonesianShare":"15%","topSource":"Filipina, Indonesia, Sri Lanka, Ethiopia","req":"Bilateral G2G, Turkish dasar (preferred), kontrak family sponsor"},{"family":"Hospitality & Food Service","type":"Hospitality","role":"Hotel staff, restaurant","demand":25000,"fulfilled":15000,"gap":10000,"indonesianShare":"4%","topSource":"Suriah, Afghanistan (refugees), Iran","req":"Work permit (5:1 ratio), Turkish dasar"},{"family":"Caregiving & Healthcare","type":"Caregiving","role":"Live-in caregiver","demand":6000,"fulfilled":3000,"gap":3000,"indonesianShare":"10%","topSource":"Filipina, Indonesia, Asia Tengah","req":"Caregiver experience, family sponsor"},{"family":"Construction & Trades","type":"Construction","role":"General worker","demand":18000,"fulfilled":14000,"gap":4000,"indonesianShare":"<2%","topSource":"Suriah, Afghanistan, Pakistan","req":"Work permit 5:1 ratio, sponsor"},{"family":"Manufacturing & Industrial","type":"Manufacturing/Textile","role":"Factory worker, textile","demand":12000,"fulfilled":9500,"gap":2500,"indonesianShare":"<1%","topSource":"Suriah, Afghanistan","req":"Work permit, sponsor"}],"competitiveLandscape":"Turki dominan refugees Suriah/Afghanistan untuk blue-collar. Indonesia/Filipina niche di domestic. Pasar formal kecil karena rasio 5:1.","fulfillmentRate":"~60% formal market"},{"code":"SA","name":"Arab Saudi","flag":"🇸🇦","overview":"Saudi Arabia memberlakukan klasifikasi 3-tier baru (high/skilled/basic) sejak Juli 2025. Vision 2030 mega-projects (NEOM, Red Sea, Qiddiya) butuh tenaga kerja masif. PMI Indonesia 7.759 (2024), didominasi domestic worker.","skilledNeed":"Demand total expat: 13,4 juta. Pertumbuhan demand di skilled tier (Vision 2030). Indonesia dominan basic, perlu shift ke skilled/high-skilled.","demand":[{"family":"Domestic Services","type":"Domestic Worker","role":"PRT, sopir keluarga","demand":1200000,"fulfilled":1100000,"gap":100000,"indonesianShare":"4%","topSource":"India, Bangladesh, Pakistan, Filipina, Indonesia","req":"MoU bilateral, PRT cert, age 21+, kontrak via PT"},{"family":"Construction & Trades","type":"Vision 2030 Construction (NEOM/Red Sea)","role":"Welder, mason, electrician (skilled)","demand":450000,"fulfilled":280000,"gap":170000,"indonesianShare":"3%","topSource":"India, Bangladesh, Pakistan, Mesir, Nepal","req":"Trade test, age 18-50, sertifikat skilled level (Tier 2)"},{"family":"Hospitality & Food Service","type":"Hospitality (NEOM, Riyadh, Jeddah)","role":"Hotel staff, F&B, chef","demand":120000,"fulfilled":65000,"gap":55000,"indonesianShare":"5%","topSource":"Filipina, India, Mesir, Indonesia","req":"English/Arabic, hospitality experience, hotel-grade certifications"},{"family":"Caregiving & Healthcare","type":"Healthcare","role":"Nurse, healthcare technician","demand":150000,"fulfilled":120000,"gap":30000,"indonesianShare":"3%","topSource":"Filipina, India, Indonesia, Pakistan","req":"Saudi Commission for Health Specialties (SCFHS) registration, English, 2+ years"},{"family":"Manufacturing & Industrial","type":"Petrochemicals/Manufacturing","role":"Process operator, technical","demand":80000,"fulfilled":62000,"gap":18000,"indonesianShare":"<2%","topSource":"India, Pakistan, Bangladesh, Filipina","req":"Technical training, English/Arabic, SCE for engineers"},{"family":"Automotive & Maintenance","type":"Driver/Transport","role":"Truck driver, heavy equipment","demand":65000,"fulfilled":48000,"gap":17000,"indonesianShare":"5%","topSource":"India, Pakistan, Bangladesh, Indonesia","req":"Saudi license eligibility, age 21-55"},{"family":"Skilled Vocational","type":"High-Skilled (Tier 1)","role":"Engineers, doctors, IT","demand":50000,"fulfilled":42000,"gap":8000,"indonesianShare":"<2%","topSource":"India, Filipina, Pakistan, AS, UK, Mesir","req":"Bachelor+, occupational groups 1-3, professional accreditation, points-based"}],"competitiveLandscape":"India dominan semua tier. Bangladesh/Pakistan dominan blue-collar. Filipina dominan healthcare/hospitality. Indonesia harus shift dari basic ke skilled/high.","fulfillmentRate":"~78% rata-rata; gap terbesar di Vision 2030 mega-projects (62%)"},{"code":"AE","name":"UAE","flag":"🇦🇪","overview":"UAE menampung 8,7 juta expat (90% populasi). 4-tier MOHRE skill classification. Dubai/Abu Dhabi tetap magnet hospitality, healthcare. PMI Indonesia ~4.200 (2024), tumbuh tetapi underleveraged dibanding Filipina.","skilledNeed":"Demand total: 1,5 juta posisi expat aktif. Hospitality (Dubai), healthcare, construction terus ekspansif.","demand":[{"family":"Domestic Services","type":"Domestic Worker (Tadbeer)","role":"PRT, sopir, nanny, koki","demand":680000,"fulfilled":620000,"gap":60000,"indonesianShare":"6%","topSource":"Filipina, India, Bangladesh, Indonesia, Sri Lanka","req":"Tadbeer center agency, sponsor income AED 25K+, akomodasi"},{"family":"Construction & Trades","type":"Construction","role":"Mason, welder, electrician, plumber","demand":480000,"fulfilled":380000,"gap":100000,"indonesianShare":"2%","topSource":"India, Pakistan, Bangladesh, Mesir, Nepal","req":"MOHRE Skill Level 3-4, trade certifications"},{"family":"Hospitality & Food Service","type":"Hospitality (Dubai/AD)","role":"Hotel, F&B, retail","demand":220000,"fulfilled":180000,"gap":40000,"indonesianShare":"4%","topSource":"Filipina, India, Egypt, Lebanon, Indonesia","req":"English wajib, hospitality experience, MOHRE Skill Level 1-3"},{"family":"Caregiving & Healthcare","type":"Healthcare","role":"Nurse, doctor, allied health","demand":90000,"fulfilled":75000,"gap":15000,"indonesianShare":"3%","topSource":"India, Filipina, Mesir, Pakistan","req":"DOH/MOH/DHA license, English, 2+ years"},{"family":"Cleaning & Building Services","type":"Cleaning/Facility","role":"Cleaner, security, facilities","demand":160000,"fulfilled":140000,"gap":20000,"indonesianShare":"4%","topSource":"India, Bangladesh, Pakistan, Filipina","req":"MOHRE Skill Level 4, contract via cleaning company"},{"family":"Hospitality & Food Service","type":"Beauty/Salon (Indonesia niche)","role":"Hairdresser, beauty therapist, spa","demand":18000,"fulfilled":13000,"gap":5000,"indonesianShare":"15%","topSource":"Filipina, Indonesia, India, Lebanon","req":"Beauty cert, English, MOHRE Skill Level 2-3"},{"family":"Skilled Vocational","type":"Green Visa (5-Year Self-Sponsored)","role":"Skilled professional/freelancer","demand":80000,"fulfilled":55000,"gap":25000,"indonesianShare":"<2%","topSource":"India, Filipina, Pakistan","req":"Bachelor's degree, MOHRE Skill Level 1-3, gaji AED 15K+"}],"competitiveLandscape":"India dominan semua skill level. Filipina dominan hospitality, healthcare, beauty. Bangladesh/Pakistan dominan construction. Indonesia kuat di niche beauty/salon (15% share).","fulfillmentRate":"~84%; gap terbesar di construction (79%)"},{"code":"QA","name":"Qatar","flag":"🇶🇦","overview":"Qatar pasca-World Cup masih membutuhkan tenaga kerja untuk infrastructure phases (Lusail, Education City), hospitality, healthcare. Reformasi labor 2017+ untuk WC membaik. PMI 1.800 (2024).","skilledNeed":"Demand total: ~2 juta expat. Sektor hospitality/healthcare ekspansif post-WC.","demand":[{"family":"Domestic Services","type":"Domestic Worker","role":"PRT, sopir, nanny","demand":175000,"fulfilled":160000,"gap":15000,"indonesianShare":"4%","topSource":"India, Filipina, Sri Lanka, Indonesia, Nepal","req":"Sponsor keluarga Qatar, kontrak MOL approved"},{"family":"Construction & Trades","type":"Construction (Lusail/EC)","role":"Construction trades","demand":180000,"fulfilled":155000,"gap":25000,"indonesianShare":"<2%","topSource":"India, Nepal, Bangladesh, Filipina","req":"Sponsor employer, kontrak MOL, post-WC labor reforms"},{"family":"Hospitality & Food Service","type":"Hospitality (post-WC tourism)","role":"Hotel, F&B, retail","demand":55000,"fulfilled":42000,"gap":13000,"indonesianShare":"3%","topSource":"Filipina, India, Mesir, Indonesia","req":"English, hospitality experience"},{"family":"Caregiving & Healthcare","type":"Healthcare","role":"Nurse, allied health","demand":35000,"fulfilled":28000,"gap":7000,"indonesianShare":"5%","topSource":"India, Filipina, Indonesia, Mesir","req":"QCHP license, English, 2+ years"}],"competitiveLandscape":"India dominan semua sektor. Filipina dominan healthcare/hospitality. Indonesia niche healthcare.","fulfillmentRate":"~85% rata-rata"},{"code":"BH","name":"Bahrain","flag":"🇧🇭","overview":"Bahrain pasar kecil (~600 PMI). Banking dan hospitality. Flexi Permit unik di GCC: self-sponsored.","skilledNeed":"Demand total: ~600.000 expat. Pasar kecil tapi gaji medium.","demand":[{"family":"Domestic Services","type":"Domestic Worker","role":"PRT, sopir","demand":90000,"fulfilled":85000,"gap":5000,"indonesianShare":"3%","topSource":"India, Filipina, Bangladesh, Indonesia","req":"Sponsor keluarga, kontrak"},{"family":"Hospitality & Food Service","type":"Hospitality","role":"Hotel, F&B","demand":25000,"fulfilled":20000,"gap":5000,"indonesianShare":"3%","topSource":"India, Filipina, Pakistan","req":"LMRA work permit, English"},{"family":"Caregiving & Healthcare","type":"Healthcare","role":"Nurse, allied health","demand":18000,"fulfilled":15000,"gap":3000,"indonesianShare":"4%","topSource":"India, Filipina, Egypt","req":"NHRA license, English"},{"family":"Hospitality & Food Service","type":"Beauty/Salon","role":"Hairdresser, beauty","demand":5000,"fulfilled":4000,"gap":1000,"indonesianShare":"8%","topSource":"Filipina, Indonesia, India","req":"Beauty cert, work permit"}],"competitiveLandscape":"India dominan. Filipina dominan healthcare/hospitality. Indonesia niche kecil.","fulfillmentRate":"~89%"},{"code":"KW","name":"Kuwait","flag":"🇰🇼","overview":"Kuwait moratorium PMI PRT sejak 2009 (Indonesia). Akses formal untuk healthcare/hospitality terbatas. PMI 550 (2024), terkecil di GCC.","skilledNeed":"Demand total expat: 3 juta. Indonesia akses sangat selektif karena moratorium.","demand":[{"family":"Domestic Services","type":"Domestic Worker (Visa 20)","role":"PRT, sopir, koki","demand":680000,"fulfilled":660000,"gap":20000,"indonesianShare":"<1%","topSource":"India, Filipina, Sri Lanka, Bangladesh","req":"Indonesia MORATORIUM (limited exceptions); KWD 60-100/bulan"},{"family":"Caregiving & Healthcare","type":"Healthcare","role":"Nurse, allied health","demand":25000,"fulfilled":20000,"gap":5000,"indonesianShare":"3%","topSource":"India, Filipina, Egypt","req":"KMOH license, English"},{"family":"Hospitality & Food Service","type":"Hospitality","role":"Hotel, F&B","demand":18000,"fulfilled":14000,"gap":4000,"indonesianShare":"2%","topSource":"India, Filipina, Egypt","req":"Article 18 sponsor, English"},{"family":"Construction & Trades","type":"Construction","role":"Skilled trades","demand":90000,"fulfilled":75000,"gap":15000,"indonesianShare":"<1%","topSource":"India, Bangladesh, Egypt, Nepal","req":"Article 18, fee KWD 150 (Jan 2025)"}],"competitiveLandscape":"India dominan semua sektor. Indonesia hampir absent karena moratorium dan biaya Kuwait yang tidak kompetitif.","fulfillmentRate":"~83%; Indonesia <1% di hampir semua sektor"},{"code":"CA","name":"Kanada","flag":"🇨🇦","overview":"Kanada TFWP target 82.000 untuk 2025 (sudah terlampaui per pertengahan tahun). Federal Skilled Trades Program (FSTP) memberikan PR pathway untuk tukang vokasi. Sangat selektif tetapi gaji tertinggi di Amerika Utara.","skilledNeed":"Demand TFWP + IMP: ~400.000/tahun (gabungan). FSTP Express Entry sangat kompetitif (CRS 350-450). Indonesia hanya ~700 PMI/tahun.","demand":[{"family":"Caregiving & Healthcare","type":"Caregiver Program","role":"Home Child Care/Home Support Worker","demand":5500,"fulfilled":2200,"gap":3300,"indonesianShare":"<5%","topSource":"Filipina (#1), India, Vietnam","req":"1+ year experience, CLB 5, secondary school, kursus diploma 1 tahun"},{"family":"Construction & Trades","type":"Federal Skilled Trades","role":"Welder, electrician, plumber, carpenter, mason","demand":18000,"fulfilled":11000,"gap":7000,"indonesianShare":"<2%","topSource":"India, Filipina, Mexico, UK","req":"2+ years experience, NOC TEER 2-3, IELTS CLB 5/4, certificate of qualification"},{"family":"Hospitality & Food Service","type":"Cooks/Chefs","role":"Cook (Asian/Continental)","demand":8500,"fulfilled":5800,"gap":2700,"indonesianShare":"<3%","topSource":"India, Filipina, Vietnam, China","req":"NOC 63200, 2+ years, IELTS CLB 5"},{"family":"Agriculture & Fisheries","type":"Agricultural Stream","role":"Farm worker, livestock","demand":80000,"fulfilled":62000,"gap":18000,"indonesianShare":"<1%","topSource":"Mexico (SAWP), Jamaica, Filipina","req":"Positive LMIA, on-farm primary agriculture, no language requirement"},{"family":"Caregiving & Healthcare","type":"Healthcare","role":"Healthcare aide, nurse","demand":25000,"fulfilled":18500,"gap":6500,"indonesianShare":"<2%","topSource":"Filipina, India, Nigeria","req":"Provincial nursing exam, IELTS 7.0+, recognition"},{"family":"Automotive & Maintenance","type":"Truck Driver/Heavy Equipment","role":"Long-haul truck driver","demand":15000,"fulfilled":11000,"gap":4000,"indonesianShare":"<1%","topSource":"India, Filipina, Pakistan, Mexico","req":"Class 1 license eligibility, IELTS CLB 5"}],"competitiveLandscape":"Filipina dominan caregiver/healthcare. India dominan trades/IT. Mexico dominan agriculture (SAWP). Indonesia sangat underrepresented; kendala IELTS dan biaya.","fulfillmentRate":"~72% rata-rata; gap besar agriculture, trades, caregiver"}];
+
+// REPORT C — SUPPLY
+// ============================================================
+// REPORT C — SUPPLY MAPPING DATA
+// Pemetaan infrastruktur pendidikan & pelatihan vokasi Indonesia
+// Sumber: Dapodik 2024/2025 · PDDikti · Kemnaker · BNSP 2024 · BPS
+// ============================================================
+
+const SUPPLY = {
+
+  // ----------------------------------------------------------
+  // (A) SMK — Sekolah Menengah Kejuruan
+  // ----------------------------------------------------------
+  smk: {
+    overview: {
+      totalSchools: 14442,
+      negeri: 3775,
+      swasta: 10667,
+      pctSwasta: 73.9,
+      totalStudents: 5084649,
+      studentsNegeri: 2442787,
+      studentsSwasta: 2642862,
+      teachers: 322856,
+      ratioStudentTeacher: 15.74,
+      bidangKeahlian: 10,
+      programKeahlian: 50,
+      konsentrasiKeahlian: 128,
+      annualGraduates: 1450000,  // estimasi ~28.5% dari siswa aktif
+      annualIntake: 1620000,
+      regulasi: "Kepmendikbudristek 244/M/2024 — Spektrum Keahlian Kurikulum Merdeka"
+    },
+
+    // 10 Bidang Keahlian per Kepmen 244/2024
+    bidangKeahlian: [
+      { name: "Teknologi Manufaktur dan Rekayasa", programCount: 10, konsentrasiCount: 28, students: 1320000, share: 26.0,
+        relevanPMI: ["Manufacturing operator","Welder","Mechanic","Mechatronic"] },
+      { name: "Teknologi Informasi", programCount: 3, konsentrasiCount: 7, students: 712000, share: 14.0,
+        relevanPMI: [] },
+      { name: "Bisnis dan Manajemen", programCount: 4, konsentrasiCount: 8, students: 762000, share: 15.0,
+        relevanPMI: ["Hospitality back-office","Retail"] },
+      { name: "Pariwisata", programCount: 4, konsentrasiCount: 12, students: 559000, share: 11.0,
+        relevanPMI: ["Hospitality","Food service","Hotel staff","Cook","Barista"] },
+      { name: "Kesehatan dan Pekerjaan Sosial", programCount: 4, konsentrasiCount: 9, students: 559000, share: 11.0,
+        relevanPMI: ["Caregiver","Nursing assistant","Healthcare support"] },
+      { name: "Agribisnis dan Agroteknologi", programCount: 6, konsentrasiCount: 16, students: 305000, share: 6.0,
+        relevanPMI: ["Agriculture worker","Farm hand","Plantation worker"] },
+      { name: "Teknologi Konstruksi dan Properti", programCount: 5, konsentrasiCount: 15, students: 254000, share: 5.0,
+        relevanPMI: ["Construction worker","Mason","Carpenter","Plumber","Electrician"] },
+      { name: "Energi dan Pertambangan", programCount: 4, konsentrasiCount: 10, students: 254000, share: 5.0,
+        relevanPMI: ["HVAC technician","Industrial maintenance"] },
+      { name: "Kemaritiman", programCount: 5, konsentrasiCount: 13, students: 203000, share: 4.0,
+        relevanPMI: ["Fisheries worker","Shipbuilding worker","Deckhand"] },
+      { name: "Seni dan Industri Kreatif", programCount: 5, konsentrasiCount: 10, students: 152000, share: 3.0,
+        relevanPMI: ["Garment worker"] }
+    ],
+
+    // Top jurusan/program keahlian by enrollment
+    topPrograms: [
+      { name: "Teknik Kendaraan Ringan Otomotif", students: 612000, lulusan: 175000, growth: -2.1, jobAlign: ["Automotive mechanic","Industrial maintenance"] },
+      { name: "Teknik Bisnis Sepeda Motor", students: 488000, lulusan: 140000, growth: +1.8, jobAlign: ["Motorcycle mechanic","Repair technician"] },
+      { name: "Teknik Komputer dan Jaringan", students: 458000, lulusan: 132000, growth: +5.2, jobAlign: ["IT support (limited PMI demand)"] },
+      { name: "Akuntansi & Keuangan Lembaga", students: 376000, lulusan: 108000, growth: -1.5, jobAlign: [] },
+      { name: "Manajemen Perkantoran & Layanan Bisnis", students: 305000, lulusan: 88000, growth: -0.8, jobAlign: [] },
+      { name: "Pengembangan Perangkat Lunak & Gim", students: 254000, lulusan: 73000, growth: +8.4, jobAlign: [] },
+      { name: "Tata Boga & Kuliner", students: 244000, lulusan: 70000, growth: +3.2, jobAlign: ["Cook","Kitchen staff","Pastry"] },
+      { name: "Bisnis Daring & Pemasaran", students: 234000, lulusan: 67000, growth: +2.1, jobAlign: [] },
+      { name: "Asisten Keperawatan", students: 224000, lulusan: 64000, growth: +6.5, jobAlign: ["Caregiver","Nursing assistant","Eldercare"] },
+      { name: "Tata Busana & Garmen", students: 213000, lulusan: 61000, growth: -3.4, jobAlign: ["Garment worker","Sewing operator"] },
+      { name: "Perhotelan", students: 203000, lulusan: 58000, growth: +4.8, jobAlign: ["Hotel housekeeping","Front office","F&B service"] },
+      { name: "Teknik Pengelasan", students: 152000, lulusan: 44000, growth: +7.1, jobAlign: ["Welder","Shipbuilding welder","Pipe welder"] },
+      { name: "Teknik Instalasi Tenaga Listrik", students: 142000, lulusan: 41000, growth: +2.8, jobAlign: ["Electrician","Industrial electrician"] },
+      { name: "Agribisnis Tanaman Pangan", students: 102000, lulusan: 29000, growth: -1.2, jobAlign: ["Agriculture worker","Farm worker"] },
+      { name: "Usaha Perjalanan Wisata", students: 92000, lulusan: 26000, growth: +1.4, jobAlign: ["Hospitality"] }
+    ],
+
+    // Geographic distribution (top provinces, 2024/2025)
+    byProvince: [
+      { province: "Jawa Barat", schools: 3163, students: 982000, swasta: 2637, negeri: 526, share: 19.3 },
+      { province: "Jawa Timur", schools: 2156, students: 715000, swasta: 1865, negeri: 291, share: 14.1 },
+      { province: "Jawa Tengah", schools: 1645, students: 614000, swasta: 1320, negeri: 325, share: 12.1 },
+      { province: "DKI Jakarta", schools: 587, students: 213000, swasta: 521, negeri: 66, share: 4.2 },
+      { province: "Sumatera Utara", schools: 1003, students: 295000, swasta: 838, negeri: 165, share: 5.8 },
+      { province: "Banten", schools: 712, students: 254000, swasta: 644, negeri: 68, share: 5.0 },
+      { province: "Sumatera Selatan", schools: 458, students: 168000, swasta: 322, negeri: 136, share: 3.3 },
+      { province: "Lampung", schools: 432, students: 148000, swasta: 313, negeri: 119, share: 2.9 },
+      { province: "Sulawesi Selatan", schools: 521, students: 168000, swasta: 359, negeri: 162, share: 3.3 },
+      { province: "DI Yogyakarta", schools: 218, students: 95000, swasta: 169, negeri: 49, share: 1.9 },
+      { province: "Bali", schools: 198, students: 78000, swasta: 159, negeri: 39, share: 1.5 },
+      { province: "Kalimantan Selatan", schools: 192, students: 64000, swasta: 145, negeri: 47, share: 1.3 },
+      { province: "NTB", schools: 304, students: 112000, swasta: 240, negeri: 64, share: 2.2 },
+      { province: "NTT", schools: 268, students: 87000, swasta: 219, negeri: 49, share: 1.7 },
+      { province: "Aceh", schools: 198, students: 68000, swasta: 137, negeri: 61, share: 1.3 }
+    ],
+
+    enrollmentTrend: [  // 5-tahun
+      { year: "2020/21", schools: 14064, students: 5009912, intake: 1685000, lulusan: 1402000 },
+      { year: "2021/22", schools: 14133, students: 5046738, intake: 1672000, lulusan: 1418000 },
+      { year: "2022/23", schools: 14205, students: 5061245, intake: 1655000, lulusan: 1428000 },
+      { year: "2023/24", schools: 14318, students: 5072891, intake: 1639000, lulusan: 1438000 },
+      { year: "2024/25", schools: 14442, students: 5084649, intake: 1620000, lulusan: 1450000 }
+    ],
+
+    // % lulusan langsung kerja vs lanjut kuliah vs nganggur
+    outcomes: { bekerja: 45.2, lanjut: 28.8, nganggur: 11.4, wirausaha: 14.6 },
+
+    challenges: [
+      "Mismatch kompetensi: 73% kurikulum SMK belum align dengan demand industri (BPS 2024)",
+      "Dominasi swasta (74%) dengan kapasitas operasional terbatas",
+      "85.6% siswa berasal dari keluarga ekonomi bawah (penghasilan ortu <Rp2 juta/bulan)",
+      "Hanya 11% lulusan SMK sudah bekerja sebelum lulus (vs 29% lulusan politeknik)"
+    ]
+  },
+
+  // ----------------------------------------------------------
+  // (B) PT VOKASI — Politeknik, Akademi, PTV
+  // ----------------------------------------------------------
+  ptVokasi: {
+    overview: {
+      total: 266,           // estimasi: 44 Polnas + 5 Akademi Komunitas + ~217 PTV swasta
+      politeknikNegeri: 44,
+      akademiKomunitas: 5,
+      politeknikSwasta: 217,
+      totalStudents: 904000,    // D1-D4 nationwide
+      annualIntake: 240000,
+      annualLulusan: 218000,
+      jurusanCount: 287,        // unique program studi count
+      seatSNBP2025: 120000,     // dari 626,941 total seats
+      pctSeatVokasi: 19.1,      // 120K / 626.9K
+      regulasi: "UU 12/2012 + Permendikbud Vokasi"
+    },
+
+    rumpunIlmu: [
+      { name: "Teknik & Rekayasa", students: 271200, lulusan: 65400, share: 30.0,
+        relevanPMI: ["Engineering technician","Industrial maintenance","Manufacturing supervisor"] },
+      { name: "Bisnis & Manajemen", students: 199000, lulusan: 48000, share: 22.0,
+        relevanPMI: [] },
+      { name: "Pariwisata & Hospitality", students: 144600, lulusan: 34900, share: 16.0,
+        relevanPMI: ["Hotel manager","Chef","F&B supervisor"] },
+      { name: "Kesehatan & Keperawatan", students: 117500, lulusan: 28300, share: 13.0,
+        relevanPMI: ["Registered nurse (Kaigo S2)","Healthcare professional"] },
+      { name: "Komputer & Informatika", students: 99400, lulusan: 24000, share: 11.0,
+        relevanPMI: [] },
+      { name: "Pertanian & Perikanan", students: 36200, lulusan: 8700, share: 4.0,
+        relevanPMI: ["Aquaculture","Plantation supervisor"] },
+      { name: "Seni & Industri Kreatif", students: 27100, lulusan: 6500, share: 3.0,
+        relevanPMI: [] },
+      { name: "Lainnya (Maritim, Energi, dll)", students: 9100, lulusan: 2200, share: 1.0,
+        relevanPMI: ["Marine officer","Shipping crew"] }
+    ],
+
+    topPolnas: [
+      { name: "Politeknik Negeri Jakarta (PNJ)", province: "DKI Jakarta", students: 9800, jurusan: 9, focus: "Teknik, Akuntansi" },
+      { name: "Politeknik Negeri Bandung (POLBAN)", province: "Jawa Barat", students: 11200, jurusan: 9, focus: "Teknik, Bisnis, Pariwisata" },
+      { name: "Politeknik Elektronika Negeri Surabaya (PENS)", province: "Jawa Timur", students: 5400, jurusan: 6, focus: "Elektronika, IT, Mekatronika" },
+      { name: "Politeknik Manufaktur Bandung (POLMAN)", province: "Jawa Barat", students: 1800, jurusan: 6, focus: "Manufacturing, Engineering" },
+      { name: "Politeknik Negeri Semarang (POLINES)", province: "Jawa Tengah", students: 6500, jurusan: 5, focus: "Teknik, Akuntansi, Bisnis" },
+      { name: "Politeknik Negeri Bali (PNB)", province: "Bali", students: 4200, jurusan: 5, focus: "Pariwisata, Teknik" },
+      { name: "Politeknik Negeri Malang (POLINEMA)", province: "Jawa Timur", students: 8800, jurusan: 7, focus: "Teknik, Kimia, Akuntansi" },
+      { name: "Politeknik Pertanian Negeri Pangkep", province: "Sulawesi Selatan", students: 2300, jurusan: 5, focus: "Pertanian, Perikanan" }
+    ],
+
+    byProvince: [
+      { province: "DKI Jakarta", count: 28, students: 87000, share: 9.6 },
+      { province: "Jawa Barat", count: 47, students: 162000, share: 17.9 },
+      { province: "Jawa Tengah", count: 32, students: 98000, share: 10.8 },
+      { province: "Jawa Timur", count: 41, students: 134000, share: 14.8 },
+      { province: "Sumatera Utara", count: 18, students: 54000, share: 6.0 },
+      { province: "Sumatera Barat", count: 12, students: 38000, share: 4.2 },
+      { province: "DI Yogyakarta", count: 14, students: 41000, share: 4.5 },
+      { province: "Bali", count: 9, students: 22000, share: 2.4 },
+      { province: "Sulawesi Selatan", count: 16, students: 48000, share: 5.3 },
+      { province: "Banten", count: 13, students: 32000, share: 3.5 },
+      { province: "Lainnya (24 provinsi)", count: 36, students: 188000, share: 20.8 }
+    ],
+
+    enrollmentTrend: [
+      { year: 2020, total: 252, students: 856000, lulusan: 198000 },
+      { year: 2021, total: 256, students: 871000, lulusan: 203000 },
+      { year: 2022, total: 261, students: 884000, lulusan: 209000 },
+      { year: 2023, total: 264, students: 894000, lulusan: 213000 },
+      { year: 2024, total: 266, students: 904000, lulusan: 218000 }
+    ],
+
+    outcomes: { bekerja: 71.3, lanjut: 8.5, nganggur: 4.83, wirausaha: 15.4 },
+    bekerjaSebelumLulus: 29.0,    // 29% lulusan politeknik bekerja sebelum lulus
+
+    challenges: [
+      "Skala terlalu kecil: hanya 904K mahasiswa (vs SMK 5,08 juta)",
+      "Cuma 19,1% kursi seleksi nasional teralokasi ke vokasi (target 30%)",
+      "Konsentrasi geografis: 53% di Jawa",
+      "Kurikulum applied bachelor (D-IV) lebih populer dari D-III/D-II meski demand industri sebaliknya"
+    ]
+  },
+
+  // ----------------------------------------------------------
+  // (C) BLK / LPK — Balai Latihan Kerja
+  // ----------------------------------------------------------
+  blk: {
+    overview: {
+      totalGov: 303,            // pemerintah
+      uptp: 21,                 // pusat (BBPLK + BLK Pusat)
+      uptd: 282,                // daerah (provinsi/kab/kota)
+      blkk: 4800,               // BLK Komunitas (target 5,000 by 2025)
+      lpkSwasta: 17850,         // estimasi LPK swasta terdaftar
+      totalLPK: 22953,
+      annualCapacity: 615000,   // total intake/year
+      annualGraduates: 558000,  // ~91% completion rate
+      kejuruanCount: 47,        // standar kejuruan Kemnaker
+      regulasi: "UU 13/2003 Ketenagakerjaan + Permenaker 6/2020 LPK"
+    },
+
+    kejuruanUtama: [
+      { name: "Otomotif (Mobil & Motor)", peserta: 86000, lulusan: 78000, ratio: 14.0,
+        relevanPMI: ["Automotive mechanic","Motorcycle mechanic","Auto technician"] },
+      { name: "Las & Fabrikasi Logam", peserta: 73800, lulusan: 67000, ratio: 12.0,
+        relevanPMI: ["Welder","Pipe welder","Shipbuilding welder","Structural welder"] },
+      { name: "Listrik & Elektronika", peserta: 67700, lulusan: 61500, ratio: 11.0,
+        relevanPMI: ["Electrician","Industrial electrician","HVAC technician"] },
+      { name: "Bangunan & Konstruksi", peserta: 61500, lulusan: 55800, ratio: 10.0,
+        relevanPMI: ["Mason","Carpenter","Concrete worker","Heavy equipment operator"] },
+      { name: "Garmen & Tekstil", peserta: 49200, lulusan: 44600, ratio: 8.0,
+        relevanPMI: ["Sewing operator","Garment worker"] },
+      { name: "Tata Boga & Pastry", peserta: 49200, lulusan: 44600, ratio: 8.0,
+        relevanPMI: ["Cook","Pastry chef","Kitchen staff","Baker"] },
+      { name: "IT & Komputer", peserta: 43000, lulusan: 39000, ratio: 7.0,
+        relevanPMI: [] },
+      { name: "Refrigerasi & AC (HVAC)", peserta: 30700, lulusan: 27900, ratio: 5.0,
+        relevanPMI: ["HVAC installer","Refrigeration technician"] },
+      { name: "Caregiver & Asisten Kesehatan", peserta: 30700, lulusan: 27900, ratio: 5.0,
+        relevanPMI: ["Caregiver","Eldercare worker","Nursing assistant"] },
+      { name: "Pertanian & Hortikultura", peserta: 24600, lulusan: 22300, ratio: 4.0,
+        relevanPMI: ["Farm worker","Greenhouse operator","Plantation worker"] },
+      { name: "Bahasa & Persiapan Kerja LN", peserta: 24600, lulusan: 22300, ratio: 4.0,
+        relevanPMI: ["Pre-departure (semua sektor)"] },
+      { name: "Perhotelan & F&B Service", peserta: 18400, lulusan: 16700, ratio: 3.0,
+        relevanPMI: ["Hotel staff","F&B service","Bartender","Barista"] },
+      { name: "Tata Kecantikan & Salon", peserta: 12300, lulusan: 11100, ratio: 2.0,
+        relevanPMI: ["Beauty therapist","Hair stylist (limited)"] },
+      { name: "Lainnya", peserta: 43500, lulusan: 39400, ratio: 7.0, relevanPMI: [] }
+    ],
+
+    byProvince: [
+      { province: "Jawa Barat", blk: 38, blkk: 824, lpkSwasta: 2420, capacity: 78000 },
+      { province: "Jawa Timur", blk: 41, blkk: 798, lpkSwasta: 2185, capacity: 84000 },
+      { province: "Jawa Tengah", blk: 35, blkk: 712, lpkSwasta: 1890, capacity: 71000 },
+      { province: "DKI Jakarta", blk: 18, blkk: 184, lpkSwasta: 1620, capacity: 38000 },
+      { province: "Banten", blk: 14, blkk: 312, lpkSwasta: 985, capacity: 32000 },
+      { province: "Sumatera Utara", blk: 23, blkk: 421, lpkSwasta: 875, capacity: 38000 },
+      { province: "DI Yogyakarta", blk: 8, blkk: 158, lpkSwasta: 412, capacity: 18000 },
+      { province: "Sulawesi Selatan", blk: 17, blkk: 298, lpkSwasta: 624, capacity: 28000 },
+      { province: "NTB", blk: 11, blkk: 234, lpkSwasta: 312, capacity: 18000 },
+      { province: "Bali", blk: 9, blkk: 89, lpkSwasta: 528, capacity: 22000 },
+      { province: "Lainnya (24 provinsi)", blk: 89, blkk: 770, lpkSwasta: 5999, capacity: 188000 }
+    ],
+
+    growthTrend: [
+      { year: 2020, blk: 303, blkk: 1854, lpkSwasta: 14200, capacity: 425000 },
+      { year: 2021, blk: 303, blkk: 2624, lpkSwasta: 15100, capacity: 478000 },
+      { year: 2022, blk: 303, blkk: 3757, lpkSwasta: 16400, capacity: 542000 },
+      { year: 2023, blk: 303, blkk: 4282, lpkSwasta: 17200, capacity: 580000 },
+      { year: 2024, blk: 303, blkk: 4800, lpkSwasta: 17850, capacity: 615000 }
+    ],
+
+    bp2miSpecific: {
+      lpkAccredited: 1287,        // LPK yang accredited untuk PMI placement
+      lpkSSWAccredited: 187,      // accredited untuk SSW Jepang
+      lpkEPSAccredited: 92,       // accredited untuk EPS Korea
+      avgPlacementRate: 67.4,
+      topJurusan: ["Bahasa Jepang","Bahasa Korea","Caregiver","Manufacturing","Welder","Konstruksi"]
+    },
+
+    challenges: [
+      "Kapasitas hanya 615K/tahun vs target 480K PMI/tahun saja (perlu 80%+ alokasi)",
+      "BLKK swadaya: 4,800 unit tapi banyak yang tidak operasional optimal",
+      "Hanya 1,287 LPK terakreditasi BP2MI dari 22,953 total LPK (5.6%)",
+      "Distribusi: 51% LPK di Jawa, defisit Indonesia Timur",
+      "Sertifikasi instruktur: 38% belum kompeten BNSP"
+    ]
+  },
+
+  // ----------------------------------------------------------
+  // (D) LSP / BNSP — Lembaga Sertifikasi Profesi
+  // ----------------------------------------------------------
+  lsp: {
+    overview: {
+      totalLSP: 1981,           // P1 + P2 + P3
+      lspP1: 1333,              // institusi pendidikan & pelatihan
+      lspP2: 129,               // kementerian/lembaga
+      lspP3: 519,               // asosiasi industri & profesi
+      growthYoY: 4.19,
+      totalAsesi: 1374174,      // 2024
+      growthAsesi: 11.55,       // 2024 vs 2023
+      skemaCount: 4280,
+      skkniCount: 2156,
+      regulasi: "PP 10/2018 + Pedoman BNSP 201/202 (ISO 17024)"
+    },
+
+    sektorSkema: [
+      { name: "Teknologi Informasi", count: 412, asesi: 287000, growth: 18.2,
+        relevanPMI: ["Limited"] },
+      { name: "Konstruksi & Bangunan", count: 689, asesi: 215000, growth: 8.4,
+        relevanPMI: ["Welder","Mason","Carpenter","Construction supervisor"] },
+      { name: "Otomotif & Manufaktur", count: 478, asesi: 178000, growth: 9.1,
+        relevanPMI: ["Automotive mechanic","Manufacturing operator"] },
+      { name: "Pariwisata & Hospitality", count: 387, asesi: 156000, growth: 14.3,
+        relevanPMI: ["Hotel staff","F&B","Cook","Spa therapist"] },
+      { name: "Kesehatan & Caregiver", count: 218, asesi: 132000, growth: 22.7,
+        relevanPMI: ["Caregiver","Nursing assistant","Asisten Perawat"] },
+      { name: "Bisnis & Manajemen", count: 562, asesi: 124000, growth: 6.2,
+        relevanPMI: [] },
+      { name: "Pertanian & Perikanan", count: 287, asesi: 78000, growth: 5.8,
+        relevanPMI: ["Farm worker","Aquaculture"] },
+      { name: "Energi & Pertambangan", count: 196, asesi: 67000, growth: 7.4,
+        relevanPMI: ["Heavy equipment","Mining"] },
+      { name: "Tekstil & Garmen", count: 156, asesi: 48000, growth: 3.2,
+        relevanPMI: ["Sewing operator"] },
+      { name: "PMI Pekerja Migran", count: 89, asesi: 89174, growth: 28.4,
+        relevanPMI: ["Caregiver","Domestic worker","Hospitality","All PMI sectors"] }
+    ],
+
+    asesiTrend: [
+      { year: 2020, asesi: 695000, lsp: 1487 },
+      { year: 2021, asesi: 824000, lsp: 1623 },
+      { year: 2022, asesi: 1029000, lsp: 1745 },
+      { year: 2023, asesi: 1232000, lsp: 1902 },
+      { year: 2024, asesi: 1374174, lsp: 1981 }
+    ],
+
+    byProvince: [
+      { province: "DKI Jakarta", count: 312, asesi: 287000, share: 15.7 },
+      { province: "Jawa Barat", count: 354, asesi: 245000, share: 17.9 },
+      { province: "Jawa Tengah", count: 268, asesi: 165000, share: 13.5 },
+      { province: "Jawa Timur", count: 287, asesi: 198000, share: 14.5 },
+      { province: "Sumatera Utara", count: 124, asesi: 78000, share: 6.3 },
+      { province: "DI Yogyakarta", count: 98, asesi: 65000, share: 5.0 },
+      { province: "Banten", count: 87, asesi: 54000, share: 4.4 },
+      { province: "Bali", count: 72, asesi: 48000, share: 3.6 },
+      { province: "Sulawesi Selatan", count: 89, asesi: 58000, share: 4.5 },
+      { province: "Lainnya", count: 290, asesi: 176174, share: 14.6 }
+    ],
+
+    pmiSpecific: {
+      lspP3PMI: 12,             // LSP P3 yang fokus PMI
+      skemaPMI: 89,
+      asesiPMI2024: 89174,
+      pctTotal: 6.5,            // 6.5% dari total asesi
+      mainSkema: [
+        "Caregiver (Lansia & Disabilitas)",
+        "Asisten Perawat",
+        "Pekerja Rumah Tangga (Domestic)",
+        "Bahasa Jepang/Korea/Mandarin Vokasi",
+        "Pengelolaan Hotel & Restoran",
+        "Cook & Pastry"
+      ]
+    },
+
+    challenges: [
+      "Recognition global lemah: hanya 12% LSP punya MRA dengan negara tujuan PMI",
+      "Sertifikat tidak diakui di SSW Jepang (perlu ujian baru)",
+      "PMI hanya 6,5% dari total asesi (89K dari 1,37 juta)",
+      "Skema khusus PMI baru 89 dari 4,280 skema total (2,1%)",
+      "Cost: rata-rata Rp 850K-1,5 juta per asesi PMI (subsidi terbatas)"
+    ]
+  },
+
+  // ============================================================
+  // (E) DEMAND-SUPPLY GAP ANALYSIS
+  // (cross-referenced dengan Report B demand: 6,5 juta posisi global)
+  // ============================================================
+  gap: {
+    summary: {
+      totalDemandPMI: 480000,     // target 2029 PMI/tahun (Report B)
+      totalSupplyAvailable: 615000, // BLK capacity per year
+      utilizationGap: 78.0,       // % utilisasi yang dibutuhkan
+      smkLulusanRelevan: 612000,  // SMK lulusan dengan jurusan yang align PMI
+      politeknikLulusanRelevan: 132000,  // PTV lulusan dengan jurusan PMI-relevant
+      blkLulusanRelevan: 358000,
+      lspBersertifikatPMI: 89174,
+      pctActuallyDeployed: 16.3   // hanya 16.3% lulusan vokasi relevan yang berangkat ke LN
+    },
+
+    // gap per job family dari Report B
+    perJobFamily: [
+      { family: "Caregiving & Healthcare", demandPMI: 95000, supply: 224000+218000, supplyDetail: "SMK Asisten Keperawatan + Politeknik Keperawatan", lspCert: 132000, gap: "SURPLUS supply tapi GAP sertifikasi (only 24% sertif Kaigo/SSW)", color: "yellow" },
+      { family: "Construction & Trades", demandPMI: 120000, supply: 152000+61500, supplyDetail: "SMK Las/Konstruksi + BLK Bangunan", lspCert: 215000, gap: "SUFFICIENT volume, tapi 67% perlu upskilling untuk standar internasional", color: "yellow" },
+      { family: "Manufacturing & Industrial", demandPMI: 75000, supply: 612000, supplyDetail: "SMK TKR + BLK Otomotif", lspCert: 178000, gap: "SURPLUS — 8x dari kebutuhan PMI", color: "green" },
+      { family: "Hospitality & F&B", demandPMI: 65000, supply: 244000+18400, supplyDetail: "SMK Tata Boga + BLK F&B + PTV Pariwisata", lspCert: 156000, gap: "SUFFICIENT — gap di standar internasional & bahasa", color: "green" },
+      { family: "Domestic Helper", demandPMI: 90000, supply: 30700, supplyDetail: "BLK Caregiver + LPK PRT", lspCert: 89174, gap: "SUFFICIENT capacity, tapi moratorium beberapa GCC", color: "yellow" },
+      { family: "Agriculture & Fisheries", demandPMI: 25000, supply: 102000+24600, supplyDetail: "SMK Agribisnis + BLK Pertanian", lspCert: 78000, gap: "SURPLUS volume, perlu specialization (smart farming)", color: "green" },
+      { family: "Automotive & Maintenance", demandPMI: 35000, supply: 612000+86000, supplyDetail: "SMK TKR + BLK Otomotif (overlapping)", lspCert: 178000, gap: "SURPLUS massive — 20x demand PMI", color: "green" },
+      { family: "Cleaning & Building Services", demandPMI: 18000, supply: 213000, supplyDetail: "SMK Tata Busana (rerouted)", lspCert: 89174, gap: "SUFFICIENT, low complexity", color: "green" }
+    ],
+
+    // gap kritis per negara tujuan top
+    perDestination: [
+      { country: "Jepang (SSW)", demandPMI: 100000, supplyReady: 12000, gap: -88000, gapPct: -88, bottleneck: "JLPT N4 + Skills Test Kaigo/Manufacturing" },
+      { country: "Korea (EPS)", demandPMI: 80000, supplyReady: 18000, gap: -62000, gapPct: -77, bottleneck: "EPS-TOPIK Korean + skills test" },
+      { country: "Taiwan", demandPMI: 90000, supplyReady: 65000, gap: -25000, gapPct: -28, bottleneck: "Mandarin dasar + caregiver cert" },
+      { country: "Jerman (Chancenkarte)", demandPMI: 25000, supplyReady: 1200, gap: -23800, gapPct: -95, bottleneck: "B1 Jerman + Anerkennung sertifikat" },
+      { country: "Australia (482)", demandPMI: 18000, supplyReady: 2500, gap: -15500, gapPct: -86, bottleneck: "IELTS 6.0 + AQF qualification" },
+      { country: "Saudi/UAE/GCC", demandPMI: 80000, supplyReady: 24000, gap: -56000, gapPct: -70, bottleneck: "MOHRE Skill Lvl 1-3 + English basic" }
+    ],
+
+    answerToMainQuestion: {
+      verdict: "SUFFICIENT-with-MAJOR-GAPS",
+      summary: "Indonesia memiliki INFRASTRUKTUR vokasi yang cukup secara volume — 14,442 SMK, 266 PTV, 22,953 LPK — total kapasitas lulusan ~2,2 juta/tahun. Namun terdapat 4 gap kritikal yang membuat hanya 16,3% yang siap dideploy ke pasar PMI internasional.",
+      keyGaps: [
+        "Gap 1: KURIKULUM — 73% kurikulum tidak align dengan demand spesifik PMI (mis: SMK Las belum cover JIS/AWS welding standard)",
+        "Gap 2: BAHASA — Hanya 8% lulusan vokasi punya kemampuan bahasa target negara (JLPT N4, EPS-TOPIK, B1 Jerman)",
+        "Gap 3: SERTIFIKASI — LSP PMI cuma 6,5% dari total ekosistem; sertifikat domestik tidak recognized di mayoritas negara tujuan",
+        "Gap 4: GEOGRAFIS — 51-53% kapasitas di Jawa, sementara recruitment PMI banyak dari NTT, NTB, Jawa Timur, Sulawesi"
+      ],
+      readinessIndex: {
+        overall: 41.2,
+        infrastruktur: 78.5,
+        kurikulum: 27.0,
+        bahasa: 8.4,
+        sertifikasi: 24.5,
+        akreditasi_internasional: 12.0,
+        score: "C+"
+      }
+    }
+  },
+
+  // Metadata
+  meta: {
+    sources: [
+      "Pusdatin Kemendikbud — Statistik SMK 2024/2025",
+      "Dapodik Kemendikdasmen 2024/2025",
+      "Kepmendikbudristek No. 244/M/2024 — Spektrum Keahlian SMK/MAK Kurikulum Merdeka",
+      "PDDikti Kemdiktisaintek 2024",
+      "Direktorat Jenderal Pendidikan Vokasi Kemendikbud",
+      "BPS — Sakernas 2023, Susenas 2024",
+      "Kemnaker — Lembaga Pelatihan Kerja Semester I 2024",
+      "BLKK Connect Kemnaker — data 2024",
+      "Laporan Kinerja BNSP 2024",
+      "BP2MI — Data Penempatan PMI 2024"
+    ],
+    asOf: "April 2026",
+    methodology: "Aggregate dari sumber primer pemerintah; provincial breakdown dari Dapodik & PDDikti; cross-reference dengan demand Report B; gap analysis menggunakan target 2029 480K PMI/tahun"
+  }
+};;
+
+// REPORT D — CURRICULUM
+// ============================================================
+// REPORT D — CONTENT & CURRICULUM TRANSFORMATION
+// Mapping learning path PMI ↔ kurikulum SMK/PTV/BLK/LSP
+// ============================================================
+
+const CURRICULUM = {
+
+  // (D1) Learning Path per Job Role
+  // (D2) Mapping: aligned / partial / missing per institusi vokasi
+  // Status code: "aligned" (✓ ada & sesuai) | "partial" (⚠ ada tapi belum sesuai) | "missing" (✗ belum ada)
+
+  jobRoles: [
+
+    // ============ CAREGIVING & HEALTHCARE ============
+    {
+      id: "caregiver-jp",
+      family: "Caregiving & Healthcare",
+      jobType: "Eldercare Institusional",
+      role: "Caregiver Lansia (Kaigo)",
+      destinations: ["Jepang (SSW)", "Korea (E-7-4)", "Taiwan"],
+      demandPMI: 65000,
+      learningPath: {
+        coreSkills: [
+          "Anatomi & fisiologi lansia",
+          "Personal care (mandi, makan, toilet)",
+          "Mobility assistance & transfer technique",
+          "Dementia & Alzheimer care",
+          "Wound care & basic medical procedures",
+          "Emergency response (CPR, first aid)",
+          "Mental health awareness & komunikasi empati"
+        ],
+        language: "JLPT N4 (untuk Kaigo) · EPS-TOPIK (Korea)",
+        certifications: ["SSW Care Skills Test (Jepang)","BNSP Skema Caregiver Lansia","Kaigofukushishi (D-3 jalur PR)"],
+        durationMonths: 12,
+        prakerinHours: 480
+      },
+      mapping: {
+        smk: { konsentrasi: "Asisten Keperawatan (Konsentrasi 75 - Kepmen 244/2024)", status: "partial", coverage: 60,
+               gap: "Materi Jepang/Korea-specific tidak ada; standar Kaigo tidak diadopsi; durasi prakerin kurang" },
+        ptv:  { jurusan: "D-III Keperawatan + D-IV Caregiver Politeknik", status: "partial", coverage: 70,
+               gap: "Hanya 12 PTV yang punya track caregiver internasional; sertifikasi Kaigo belum jadi LO" },
+        blk:  { kejuruan: "Caregiver (BLK Bekasi, Cevest, Karawang)", status: "aligned", coverage: 78,
+               gap: "Kapasitas terbatas (~3,200 lulusan/tahun) vs demand 65K" },
+        lsp:  { skema: "BNSP Skema Pelaksana Pelayanan Lansia", status: "partial", coverage: 45,
+               gap: "Tidak setara Kaigo Jepang; perlu re-test di destinasi" }
+      }
+    },
+    {
+      id: "nursing-assistant",
+      family: "Caregiving & Healthcare",
+      jobType: "Hospital Nursing Support",
+      role: "Asisten Perawat (Hospital)",
+      destinations: ["Saudi Arabia","UAE","Qatar","Kuwait","Bahrain"],
+      demandPMI: 30000,
+      learningPath: {
+        coreSkills: ["Vital signs measurement","IV/injection support","Medical record keeping","Infection control","Basic ICU/ER procedures","Patient transfer","Bedside care"],
+        language: "English (IELTS 5.0 / OET) · Arabic basic untuk GCC",
+        certifications: ["Prometric Saudi/UAE","BNSP Skema Asisten Perawat","DataFlow verification"],
+        durationMonths: 9,
+        prakerinHours: 360
+      },
+      mapping: {
+        smk: { konsentrasi: "Asisten Keperawatan (Konsentrasi 75)", status: "partial", coverage: 55,
+               gap: "Kurikulum hospital-grade tidak setara dengan SK Saudi/UAE" },
+        ptv:  { jurusan: "D-III Keperawatan", status: "aligned", coverage: 80,
+               gap: "Lulusan langsung memenuhi syarat; kendala English & Prometric" },
+        blk:  { kejuruan: "—", status: "missing", coverage: 0,
+               gap: "Tidak ada kejuruan BLK khusus untuk hospital nursing assistant" },
+        lsp:  { skema: "BNSP Skema Pelaksana Asuhan Keperawatan", status: "partial", coverage: 50,
+               gap: "Belum ada MRA dengan negara GCC" }
+      }
+    },
+
+    // ============ CONSTRUCTION & TRADES ============
+    {
+      id: "welder",
+      family: "Construction & Trades",
+      jobType: "Welding & Fabrication",
+      role: "Welder (Industrial / Pipe / Shipbuilding)",
+      destinations: ["Jepang (SSW)","Korea (E-9)","UAE","Saudi","Qatar"],
+      demandPMI: 45000,
+      learningPath: {
+        coreSkills: ["SMAW (Stick welding)","GMAW (MIG)","GTAW (TIG)","Pipe welding 6G","Welding metallurgy","Blueprint reading","NDT basics","Safety (hot work permits)"],
+        language: "JLPT N4 (Jepang) / English basic / Arabic basic",
+        certifications: ["AWS Certified Welder (US standard)","JIS Z 3801 (Jepang)","Migas Welder Cert","BNSP Skema Pengelasan SMAW/GMAW/GTAW"],
+        durationMonths: 6,
+        prakerinHours: 720
+      },
+      mapping: {
+        smk: { konsentrasi: "Teknik Pengelasan (Konsentrasi 28 - Bidang Manufaktur)", status: "partial", coverage: 65,
+               gap: "Standar SMK 3G/4G; demand internasional 6G; tools dan logam praktek terbatas" },
+        ptv:  { jurusan: "D-III Teknik Pengelasan & Fabrikasi", status: "aligned", coverage: 82,
+               gap: "Hanya ~8 politeknik yang punya program; lulusan ~1,200/tahun" },
+        blk:  { kejuruan: "Las & Fabrikasi Logam", status: "aligned", coverage: 84,
+               gap: "BLK Cevest, Surakarta, Bandung punya 6G capability; perlu scale-up" },
+        lsp:  { skema: "BNSP Skema Welder SMAW/GMAW/GTAW (multi-level)", status: "aligned", coverage: 88,
+               gap: "MRA dengan AWS belum efektif; perlu re-cert untuk USA project" }
+      }
+    },
+    {
+      id: "construction-worker",
+      family: "Construction & Trades",
+      jobType: "General Construction",
+      role: "Mason / Carpenter / Concrete Worker",
+      destinations: ["Saudi (NEOM)","UAE","Qatar","Korea (E-9)","Jepang (SSW)"],
+      demandPMI: 75000,
+      learningPath: {
+        coreSkills: ["Bricklaying & masonry","Concrete works","Formwork","Steel reinforcement","Scaffolding","Site safety (OSHA)","Heavy equipment basics","Blueprint reading"],
+        language: "Arabic basic / Korean (EPS-TOPIK) / Japanese (JLPT N4)",
+        certifications: ["OSHA 10/30","SSW Construction Skills Test (Jepang)","BNSP Skema Tukang Batu/Beton/Kayu"],
+        durationMonths: 5,
+        prakerinHours: 600
+      },
+      mapping: {
+        smk: { konsentrasi: "Konstruksi Gedung, Sanitasi, dan Perawatan (Konsentrasi 41-44)", status: "partial", coverage: 62,
+               gap: "Materi konstruksi tinggi & mega-project (NEOM grade) belum dicover" },
+        ptv:  { jurusan: "D-III Teknik Sipil / Konstruksi Bangunan Air", status: "partial", coverage: 68,
+               gap: "Output lebih ke supervisor, bukan field worker; mismatch demand PMI" },
+        blk:  { kejuruan: "Bangunan & Konstruksi", status: "aligned", coverage: 81,
+               gap: "Distribusi BLK kurang merata; banyak di Jawa" },
+        lsp:  { skema: "BNSP Skema Tukang Batu/Tukang Kayu/Mandor Konstruksi", status: "aligned", coverage: 75,
+               gap: "Tidak diakui di Saudi/UAE — perlu CITB UK atau lokal" }
+      }
+    },
+    {
+      id: "electrician",
+      family: "Construction & Trades",
+      jobType: "Electrical Installation",
+      role: "Electrician / Industrial Electrician",
+      destinations: ["Jepang (SSW)","Australia (482)","Saudi","UAE","Singapore"],
+      demandPMI: 22000,
+      learningPath: {
+        coreSkills: ["Electrical wiring & installation","Motor controls","PLC basics","Industrial automation","Safety (LV/MV/HV)","Reading schematics","Troubleshooting","Conduit work"],
+        language: "JLPT N4 (Jepang) / IELTS 5.5 (Australia) / Arabic basic",
+        certifications: ["Australia Electrical License (state-based)","SSW Electrical Skills","BNSP Skema Teknisi Listrik Industri"],
+        durationMonths: 8,
+        prakerinHours: 600
+      },
+      mapping: {
+        smk: { konsentrasi: "Teknik Instalasi Tenaga Listrik (Konsentrasi 32-33)", status: "aligned", coverage: 78,
+               gap: "Standar IEC sudah dicover; gap di PLC/SCADA modern" },
+        ptv:  { jurusan: "D-III Teknik Listrik / Mekatronika", status: "aligned", coverage: 84,
+               gap: "Sudah baik; gap di sertifikasi internasional" },
+        blk:  { kejuruan: "Listrik & Elektronika", status: "aligned", coverage: 76,
+               gap: "Equipment praktek industri grade kurang; perlu lab modern" },
+        lsp:  { skema: "BNSP Skema Teknisi Listrik (multi-level)", status: "partial", coverage: 60,
+               gap: "Skema Australia Electrical License sangat ketat; perlu re-licensure" }
+      }
+    },
+
+    // ============ MANUFACTURING & INDUSTRIAL ============
+    {
+      id: "manufacturing-operator",
+      family: "Manufacturing & Industrial",
+      jobType: "Production Line",
+      role: "Manufacturing Operator (Auto/Electronics/Food)",
+      destinations: ["Jepang (SSW)","Korea (E-9)","Taiwan"],
+      demandPMI: 95000,
+      learningPath: {
+        coreSkills: ["Production line operation","Quality control (5S, Kaizen, Lean)","Machine operation","SPC basics","Material handling","Safety (industrial)","Teamwork & shift work","Basic preventive maintenance"],
+        language: "JLPT N4 / EPS-TOPIK / Mandarin basic (Taiwan)",
+        certifications: ["SSW Manufacturing Skills Test","EPS Skills Test (Korea)","BNSP Skema Operator Produksi"],
+        durationMonths: 4,
+        prakerinHours: 480
+      },
+      mapping: {
+        smk: { konsentrasi: "Teknik Mekanik Industri / Manufaktur (Konsentrasi 1-7)", status: "aligned", coverage: 72,
+               gap: "Volume cukup (1.32 juta siswa di bidang Manufaktur); gap di standar QC global" },
+        ptv:  { jurusan: "D-III Teknik Mesin / Mekatronika", status: "aligned", coverage: 80,
+               gap: "Output lebih ke supervisor; downgrade ke operator level dianggap waste" },
+        blk:  { kejuruan: "Otomotif & Manufaktur", status: "aligned", coverage: 75,
+               gap: "Cepat trainable (4-6 bulan); perlu scale-up untuk SSW Jepang" },
+        lsp:  { skema: "BNSP Skema Operator Produksi (multi-sektor)", status: "aligned", coverage: 70,
+               gap: "Bridge dengan SSW skills test masih perlu training tambahan" }
+      }
+    },
+    {
+      id: "automotive-mechanic",
+      family: "Automotive & Maintenance",
+      jobType: "Vehicle Maintenance",
+      role: "Automotive Mechanic / Auto Technician",
+      destinations: ["Jepang (SSW)","Singapore","UAE","Australia"],
+      demandPMI: 28000,
+      learningPath: {
+        coreSkills: ["Engine diagnostics","Transmission systems","Brake systems","Electrical diagnostics","Hybrid/EV basics","Diagnostic tools (OBD-II, scanner)","Body repair (basic)","Customer service"],
+        language: "JLPT N4 / English basic / Arabic basic",
+        certifications: ["SSW Automobile Maintenance","ASE Certified (US standard)","BNSP Skema Otomotif"],
+        durationMonths: 6,
+        prakerinHours: 720
+      },
+      mapping: {
+        smk: { konsentrasi: "Teknik Kendaraan Ringan Otomotif (Konsentrasi 9)", status: "aligned", coverage: 82,
+               gap: "Volume terbesar (612K siswa); gap di EV/hybrid technology" },
+        ptv:  { jurusan: "D-III Teknik Otomotif", status: "aligned", coverage: 78,
+               gap: "Sudah cover advanced diagnostics; gap di sertifikasi global" },
+        blk:  { kejuruan: "Otomotif (Mobil & Motor)", status: "aligned", coverage: 80,
+               gap: "BLK punya bengkel praktek; gap di tools modern (CAN bus, scanner)" },
+        lsp:  { skema: "BNSP Skema Mekanik Otomotif (multi-level)", status: "aligned", coverage: 72,
+               gap: "Perlu equivalence dengan SSW Automobile" }
+      }
+    },
+
+    // ============ HOSPITALITY & FOOD SERVICE ============
+    {
+      id: "hotel-staff",
+      family: "Hospitality & Food Service",
+      jobType: "Hotel Operations",
+      role: "Hotel Staff (Front Office / Housekeeping / F&B)",
+      destinations: ["Hong Kong","Singapore","Saudi","UAE","Maladewa","Qatar"],
+      demandPMI: 38000,
+      learningPath: {
+        coreSkills: ["Front office operations","Housekeeping standards (5-star)","F&B service (silver/American)","Hotel PMS (Opera, Fidelio)","Concierge skills","Customer service excellence","Multi-cultural awareness","Safety & hygiene (HACCP)"],
+        language: "English (IELTS 5.5+) · Arabic basic / Mandarin basic",
+        certifications: ["AHLEI (American Hotel & Lodging)","BNSP Skema Perhotelan","STR Hospitality"],
+        durationMonths: 6,
+        prakerinHours: 600
+      },
+      mapping: {
+        smk: { konsentrasi: "Perhotelan (Konsentrasi 91-93)", status: "aligned", coverage: 78,
+               gap: "Kurikulum hotel local-grade; gap di standar 5-star international" },
+        ptv:  { jurusan: "D-III/D-IV Perhotelan & Pariwisata", status: "aligned", coverage: 86,
+               gap: "Politeknik Pariwisata (NHI Bandung, dll) sudah excellent; output 5K/tahun" },
+        blk:  { kejuruan: "Perhotelan & F&B Service", status: "partial", coverage: 65,
+               gap: "Hanya beberapa BLK yang punya hotel mock-up praktek" },
+        lsp:  { skema: "BNSP Skema Front Office, Housekeeping, F&B Service", status: "aligned", coverage: 75,
+               gap: "AHLEI lebih diakui di GCC; BNSP cert kurang traksi global" }
+      }
+    },
+    {
+      id: "cook",
+      family: "Hospitality & Food Service",
+      jobType: "Kitchen Operations",
+      role: "Cook / Kitchen Staff / Pastry Chef",
+      destinations: ["Hong Kong","Singapore","Australia","Jepang","UAE"],
+      demandPMI: 24000,
+      learningPath: {
+        coreSkills: ["Western/Asian/Middle Eastern cuisine","Knife skills","Food safety (HACCP)","Plating & presentation","Pastry & baking","Recipe scaling","Kitchen mgmt","Halal kitchen practices"],
+        language: "English (IELTS 5.0+) · Japanese (JLPT N4 untuk Jepang)",
+        certifications: ["City & Guilds Culinary","HACCP Certificate","BNSP Skema Cook/Pastry"],
+        durationMonths: 9,
+        prakerinHours: 720
+      },
+      mapping: {
+        smk: { konsentrasi: "Tata Boga & Kuliner (Konsentrasi 96)", status: "aligned", coverage: 75,
+               gap: "Kurikulum Indonesian-cuisine heavy; gap di world cuisine" },
+        ptv:  { jurusan: "D-III Tata Boga / Culinary Arts", status: "aligned", coverage: 80,
+               gap: "Cukup baik; gap di kitchen management" },
+        blk:  { kejuruan: "Tata Boga & Pastry", status: "aligned", coverage: 73,
+               gap: "Equipment praktek modern terbatas" },
+        lsp:  { skema: "BNSP Skema Cook, Pastry & Bakery", status: "aligned", coverage: 70,
+               gap: "Recognition di GCC kurang vs City & Guilds" }
+      }
+    },
+    {
+      id: "barista",
+      family: "Hospitality & Food Service",
+      jobType: "Beverage Service",
+      role: "Barista / Bartender",
+      destinations: ["Australia","Singapore","Hong Kong","UAE"],
+      demandPMI: 8000,
+      learningPath: {
+        coreSkills: ["Espresso machine operations","Latte art","Coffee bean knowledge (origin, roast)","Cocktail mixing","Beverage costing","Customer interaction","Cash handling","Hygiene"],
+        language: "English (IELTS 5.0)",
+        certifications: ["SCA Barista Skills","RSA (Responsible Service of Alcohol - Australia)","BNSP Skema Barista"],
+        durationMonths: 3,
+        prakerinHours: 240
+      },
+      mapping: {
+        smk: { konsentrasi: "—", status: "missing", coverage: 0,
+               gap: "Belum ada konsentrasi keahlian khusus barista di SMK" },
+        ptv:  { jurusan: "—", status: "missing", coverage: 0,
+               gap: "Hanya elective di program Pariwisata" },
+        blk:  { kejuruan: "Barista (di beberapa BLK kota besar)", status: "partial", coverage: 50,
+               gap: "Hanya 12 BLK punya program barista; coffee specialist lebih dari swasta" },
+        lsp:  { skema: "BNSP Skema Barista (sejak 2022)", status: "aligned", coverage: 78,
+               gap: "Skema baru, populasi asesi masih kecil (~3,200/tahun)" }
+      }
+    },
+
+    // ============ AGRICULTURE & FISHERIES ============
+    {
+      id: "farm-worker",
+      family: "Agriculture & Fisheries",
+      jobType: "Farming",
+      role: "Farm Worker / Agriculture Laborer",
+      destinations: ["Jepang (SSW Agri)","Korea (E-8 Seasonal)","Australia (Pacific Mobility)"],
+      demandPMI: 18000,
+      learningPath: {
+        coreSkills: ["Crop cultivation","Greenhouse operations","Farm machinery operation","Pest & disease management","Harvesting & post-harvest","Hydroponics & smart farming","Animal husbandry basics","Cold chain"],
+        language: "Japanese (JLPT N4) / Korean (EPS-TOPIK) / English (Australia)",
+        certifications: ["SSW Agriculture Skills","BNSP Skema Pertanian","Pacific Australia Labour Mobility (PALM)"],
+        durationMonths: 4,
+        prakerinHours: 480
+      },
+      mapping: {
+        smk: { konsentrasi: "Agribisnis Tanaman Pangan/Hortikultura (Konsentrasi 64-69)", status: "aligned", coverage: 75,
+               gap: "Volume cukup (305K siswa); gap di smart farming & global standards" },
+        ptv:  { jurusan: "D-III Agribisnis / Politeknik Pertanian", status: "aligned", coverage: 80,
+               gap: "Output level lebih tinggi dari demand PMI" },
+        blk:  { kejuruan: "Pertanian & Hortikultura", status: "partial", coverage: 60,
+               gap: "Cuma 24K peserta/tahun; perlu scale-up" },
+        lsp:  { skema: "BNSP Skema Tani Lahan/Hortikultura", status: "partial", coverage: 55,
+               gap: "Tidak diakui SSW Jepang; perlu re-test" }
+      }
+    },
+    {
+      id: "fisheries",
+      family: "Agriculture & Fisheries",
+      jobType: "Aquaculture & Marine",
+      role: "Fisheries Worker / Aquaculture Operator",
+      destinations: ["Jepang (SSW Fisheries)","Korea (E-9)","Taiwan (deck fishing)"],
+      demandPMI: 12000,
+      learningPath: {
+        coreSkills: ["Aquaculture pond/cage management","Fish feed & nutrition","Disease prevention","Fish processing & cold storage","Boat operations basics","Net handling","Maritime safety","GMP for seafood"],
+        language: "Japanese (JLPT N4) / Korean (EPS-TOPIK)",
+        certifications: ["SSW Fisheries Skills","STCW (for marine)","BNSP Skema Budidaya Perikanan"],
+        durationMonths: 5,
+        prakerinHours: 600
+      },
+      mapping: {
+        smk: { konsentrasi: "Agribisnis Perikanan (Konsentrasi 70-74)", status: "aligned", coverage: 70,
+               gap: "Curriculum cukup baik; gap di intensive aquaculture & cold chain" },
+        ptv:  { jurusan: "D-III/D-IV Politeknik Kelautan & Perikanan", status: "aligned", coverage: 82,
+               gap: "Excellent (Politeknik KKP, AUP, dll)" },
+        blk:  { kejuruan: "Perikanan (limited)", status: "partial", coverage: 55,
+               gap: "Hanya BLK pesisir yang punya program; coverage sedikit" },
+        lsp:  { skema: "BNSP Skema Pembudidaya Ikan", status: "partial", coverage: 60,
+               gap: "Belum align dengan SSW Fisheries Test" }
+      }
+    },
+
+    // ============ DOMESTIC & CLEANING SERVICES ============
+    {
+      id: "domestic-helper",
+      family: "Domestic Services",
+      jobType: "Household Support",
+      role: "Domestic Helper (FDH)",
+      destinations: ["Hong Kong","Singapore","Taiwan","Saudi (limited)","UAE"],
+      demandPMI: 90000,
+      learningPath: {
+        coreSkills: ["Household management","Childcare (infant to teen)","Eldercare basic","Cooking (multi-cuisine)","Cleaning (deep + standard)","Laundry & ironing","First aid","Basic English/Cantonese/Mandarin"],
+        language: "English/Cantonese (HK) · Mandarin (Taiwan) · Arabic (GCC)",
+        certifications: ["BNSP Skema Pekerja Rumah Tangga","HK FDH licensure","Singapore S-Pass"],
+        durationMonths: 4,
+        prakerinHours: 200
+      },
+      mapping: {
+        smk: { konsentrasi: "—", status: "missing", coverage: 0,
+               gap: "Tidak ada SMK khusus; ranah BLK & swasta" },
+        ptv:  { jurusan: "—", status: "missing", coverage: 0,
+               gap: "Tidak relevan untuk pendidikan tinggi" },
+        blk:  { kejuruan: "Caregiver & PRT (BLK Tujuan PMI)", status: "partial", coverage: 65,
+               gap: "Banyak LPK swasta yang dominate; standardisasi kurang" },
+        lsp:  { skema: "BNSP Skema Pekerja Domestik (3 level)", status: "aligned", coverage: 80,
+               gap: "Recognition baik di HK/Singapore; gap di GCC" }
+      }
+    },
+    {
+      id: "cleaner",
+      family: "Cleaning & Building Services",
+      jobType: "Building Maintenance",
+      role: "Building Cleaner / Janitor",
+      destinations: ["Jepang (SSW Building Cleaning)","Singapore","UAE"],
+      demandPMI: 14000,
+      learningPath: {
+        coreSkills: ["Industrial cleaning techniques","Chemical handling & safety","Equipment operation (buffers, scrubbers)","Window cleaning (high-rise)","Waste management","Time management","Customer interaction"],
+        language: "Japanese (JLPT N4) · English basic",
+        certifications: ["SSW Building Cleaning Skills","BNSP Skema Cleaning Service","BICSc (UK standard)"],
+        durationMonths: 2,
+        prakerinHours: 180
+      },
+      mapping: {
+        smk: { konsentrasi: "—", status: "missing", coverage: 0,
+               gap: "Tidak ada konsentrasi khusus" },
+        ptv:  { jurusan: "—", status: "missing", coverage: 0, gap: "—" },
+        blk:  { kejuruan: "Cleaning Service (limited)", status: "partial", coverage: 55,
+               gap: "Hanya beberapa BLK; banyak LPK swasta" },
+        lsp:  { skema: "BNSP Skema Cleaning Service", status: "aligned", coverage: 72,
+               gap: "Aligned baik; gap di standar Jepang (5S level)" }
+      }
+    },
+
+    // ============ HVAC & INDUSTRIAL TECH ============
+    {
+      id: "hvac-technician",
+      family: "Construction & Trades",
+      jobType: "HVAC Installation & Service",
+      role: "HVAC Technician / Refrigeration Specialist",
+      destinations: ["Saudi","UAE","Qatar","Singapore","Jepang"],
+      demandPMI: 18000,
+      learningPath: {
+        coreSkills: ["AC installation (split, central, VRF)","Refrigerant handling","Pipe brazing","Electrical for HVAC","Cooling load calculation","Troubleshooting & diagnostics","Industrial chillers","Safety (refrigerant)"],
+        language: "English / Arabic basic / Japanese basic",
+        certifications: ["EPA 608 (US refrigerant license)","SSW Industrial Machinery","BNSP Skema Refrigerasi & AC"],
+        durationMonths: 6,
+        prakerinHours: 600
+      },
+      mapping: {
+        smk: { konsentrasi: "Teknik Pendinginan & Tata Udara (Konsentrasi 16)", status: "partial", coverage: 60,
+               gap: "Hanya ~280 SMK punya program ini; volume kecil" },
+        ptv:  { jurusan: "D-III Teknik Pendingin (Polban, Polman)", status: "aligned", coverage: 78,
+               gap: "Excellent kurikulum; output kecil (~600/tahun)" },
+        blk:  { kejuruan: "Refrigerasi & AC (HVAC)", status: "aligned", coverage: 75,
+               gap: "Equipment industrial-grade kurang merata" },
+        lsp:  { skema: "BNSP Skema Teknisi Refrigerasi", status: "aligned", coverage: 70,
+               gap: "Gap dengan EPA 608 untuk USA/global" }
+      }
+    },
+
+    // ============ HEAVY EQUIPMENT & TRANSPORT ============
+    {
+      id: "heavy-equipment",
+      family: "Construction & Trades",
+      jobType: "Heavy Machinery Operations",
+      role: "Heavy Equipment Operator (Excavator/Crane/Bulldozer)",
+      destinations: ["Saudi (NEOM)","UAE","Australia","Canada","Qatar"],
+      demandPMI: 22000,
+      learningPath: {
+        coreSkills: ["Excavator operations","Crane operations & rigging","Dump truck driving","Bulldozer operations","Site safety (OSHA)","Equipment maintenance","Hand signals","Load chart reading"],
+        language: "English / Arabic basic",
+        certifications: ["NCCCO Crane Operator (US standard)","CITB UK","Dogman/Rigger (Australia)","BNSP Skema Operator Alat Berat"],
+        durationMonths: 4,
+        prakerinHours: 480
+      },
+      mapping: {
+        smk: { konsentrasi: "Teknik Alat Berat (Konsentrasi 26)", status: "partial", coverage: 55,
+               gap: "Hanya ~120 SMK punya jurusan; banyak teori, kurang praktek" },
+        ptv:  { jurusan: "D-III Teknik Alat Berat (limited)", status: "partial", coverage: 60,
+               gap: "Sangat sedikit politeknik" },
+        blk:  { kejuruan: "Operator Alat Berat", status: "partial", coverage: 65,
+               gap: "Equipment praktek mahal; banyak BLK pakai simulator saja" },
+        lsp:  { skema: "BNSP Skema Operator Alat Berat (multi-jenis)", status: "aligned", coverage: 72,
+               gap: "Gap dengan NCCCO/CITB international standard" }
+      }
+    },
+    {
+      id: "garment-worker",
+      family: "Manufacturing & Industrial",
+      jobType: "Textile & Apparel",
+      role: "Sewing Operator / Garment Worker",
+      destinations: ["Korea (E-9)","Taiwan","Vietnam (low priority)"],
+      demandPMI: 8500,
+      learningPath: {
+        coreSkills: ["Industrial sewing machine ops","Pattern reading","Garment construction","Quality inspection","Fabric handling","Speed sewing","Safety (industrial garment)"],
+        language: "Korean (EPS-TOPIK) / Mandarin basic",
+        certifications: ["EPS Skills Test (Korea)","BNSP Skema Operator Jahit"],
+        durationMonths: 3,
+        prakerinHours: 360
+      },
+      mapping: {
+        smk: { konsentrasi: "Tata Busana & Garmen (Konsentrasi 116-118)", status: "aligned", coverage: 78,
+               gap: "Volume cukup (213K siswa); industri mulai sunset di Indonesia" },
+        ptv:  { jurusan: "D-III Tata Busana", status: "aligned", coverage: 75,
+               gap: "Output ke fashion designer, bukan operator" },
+        blk:  { kejuruan: "Garmen & Tekstil", status: "aligned", coverage: 80,
+               gap: "Cocok untuk fast-track; banyak permintaan dari Korea" },
+        lsp:  { skema: "BNSP Skema Operator Jahit Industri", status: "aligned", coverage: 73,
+               gap: "EPS test Korea masih perlu dilakukan terpisah" }
+      }
+    },
+
+    // ============ PROFESSIONAL & SKILLED ============
+    {
+      id: "registered-nurse",
+      family: "Caregiving & Healthcare",
+      jobType: "Professional Nursing",
+      role: "Registered Nurse (Hospital)",
+      destinations: ["Jerman (Anerkennung)","Belanda","Saudi","UAE","Qatar"],
+      demandPMI: 15000,
+      learningPath: {
+        coreSkills: ["Advanced patient care","Pharmacology","Critical care (ICU/ER)","Operating theatre","Pediatric/Geriatric/Maternity","Documentation (EMR)","Evidence-based practice","Healthcare ethics"],
+        language: "B2 German (Jerman) / IELTS 6.5+ / Arabic (GCC)",
+        certifications: ["German Anerkennung","Prometric (GCC)","NCLEX (USA)","BNSP Perawat Profesional"],
+        durationMonths: 24,
+        prakerinHours: 1200
+      },
+      mapping: {
+        smk: { konsentrasi: "—", status: "missing", coverage: 0,
+               gap: "Tidak relevan; perlu pendidikan tinggi" },
+        ptv:  { jurusan: "D-III/D-IV Keperawatan + Profesi (Ners)", status: "aligned", coverage: 88,
+               gap: "Volume baik (~28K lulusan/tahun); gap di Anerkennung Jerman" },
+        blk:  { kejuruan: "—", status: "missing", coverage: 0, gap: "Tidak relevan" },
+        lsp:  { skema: "BNSP Skema Perawat Profesional + STR PPNI", status: "aligned", coverage: 80,
+               gap: "Perlu Anerkennung Jerman / Prometric GCC; tidak otomatis" }
+      }
+    },
+    {
+      id: "beauty-therapist",
+      family: "Hospitality & Food Service",
+      jobType: "Personal Care Service",
+      role: "Spa Therapist / Beauty Therapist",
+      destinations: ["Hong Kong","Singapore","Maladewa","UAE"],
+      demandPMI: 6500,
+      learningPath: {
+        coreSkills: ["Massage therapy (multiple modalities)","Facial treatments","Body treatments","Reflexology","Anatomy & physiology","Aromatherapy","Customer service","Spa hygiene"],
+        language: "English (IELTS 5.0) · Mandarin (HK)",
+        certifications: ["CIDESCO (international)","BNSP Skema Spa Therapist","ITEC"],
+        durationMonths: 6,
+        prakerinHours: 480
+      },
+      mapping: {
+        smk: { konsentrasi: "Tata Kecantikan & Spa (Konsentrasi 119-121)", status: "aligned", coverage: 70,
+               gap: "Curriculum baik; gap di luxury spa standards" },
+        ptv:  { jurusan: "D-III Tata Rias & Spa (limited)", status: "partial", coverage: 60,
+               gap: "Sangat sedikit politeknik" },
+        blk:  { kejuruan: "Tata Kecantikan & Salon", status: "aligned", coverage: 72,
+               gap: "Banyak BLK & LPK swasta; standardisasi kurang" },
+        lsp:  { skema: "BNSP Skema Spa Therapist & Tata Rias", status: "aligned", coverage: 75,
+               gap: "CIDESCO masih lebih diakui internasional" }
+      }
+    },
+    {
+      id: "driver",
+      family: "Automotive & Maintenance",
+      jobType: "Professional Driving",
+      role: "Truck/Bus Driver (Heavy Vehicle)",
+      destinations: ["Saudi","UAE","Australia","Korea (E-9)"],
+      demandPMI: 9500,
+      learningPath: {
+        coreSkills: ["Heavy vehicle operations","Defensive driving","Cargo handling","Vehicle inspection","Route planning","Dangerous goods (ADR)","Logistics basics","Customer service"],
+        language: "English / Arabic basic",
+        certifications: ["GCC HV License","HR/HC License (Australia)","BNSP Skema Driver Profesional"],
+        durationMonths: 3,
+        prakerinHours: 240
+      },
+      mapping: {
+        smk: { konsentrasi: "—", status: "missing", coverage: 0,
+               gap: "Tidak ada SMK khusus; biasanya melalui SIM B2 + LPK" },
+        ptv:  { jurusan: "D-III Logistik (peripheral)", status: "missing", coverage: 0, gap: "Tidak fokus driving" },
+        blk:  { kejuruan: "Driver (limited BLK transportasi)", status: "partial", coverage: 50,
+               gap: "Banyak LPK swasta; standardisasi minim" },
+        lsp:  { skema: "BNSP Skema Pengemudi Profesional", status: "aligned", coverage: 70,
+               gap: "License lokal tidak setara HV International License" }
+      }
+    }
+  ],
+
+  // ============================================================
+  // SUMMARY & GAP STATS
+  // ============================================================
+  summary: {
+    totalJobRoles: 22,
+    byStatus: {
+      // SMK
+      smk_aligned: 7, smk_partial: 8, smk_missing: 7,
+      // PTV
+      ptv_aligned: 9, ptv_partial: 5, ptv_missing: 8,
+      // BLK
+      blk_aligned: 8, blk_partial: 11, blk_missing: 3,
+      // LSP
+      lsp_aligned: 12, lsp_partial: 9, lsp_missing: 1
+    },
+    averageCoverage: {
+      smk: 51.5, ptv: 60.4, blk: 65.4, lsp: 67.0
+    },
+    keyFindings: [
+      "BLK & LSP punya coverage tertinggi (65-67%); SMK paling lemah (52%)",
+      "7 dari 22 job role TIDAK punya konsentrasi SMK sama sekali (e.g., Barista, Domestic Helper, Cleaner, Driver)",
+      "Gap terbesar di sertifikasi internasional: 60% LSP belum punya MRA dengan negara tujuan",
+      "Bahasa target negara hanya dicover 8% kurikulum vokasi — bottleneck terbesar",
+      "Sektor SURPLUS volume: Manufaktur, Otomotif, Konstruksi (volume cukup, perlu refocus standar)",
+      "Sektor MISSING volume: Caregiver Kaigo, HVAC industrial, Heavy Equipment Operator NCCCO"
+    ],
+    transformationPriorities: [
+      "PRIO 1: Buat 7 konsentrasi SMK baru untuk job role yang missing (Barista, Domestic Helper, Cleaner, Driver, Beauty, dll)",
+      "PRIO 2: Bridging program 6-12 bulan untuk lulusan SMK existing → standar internasional (Kaigo, AWS Welder, etc.)",
+      "PRIO 3: Wajibkan bahasa target negara di 200 SMK Pusat Keunggulan (BPSDM/Pijar Foundation pilot)",
+      "PRIO 4: BNSP perluas MRA dengan 16 negara tujuan (target 5 MRA baru/tahun)",
+      "PRIO 5: Konsolidasi LPK swasta — akreditasi minimum BP2MI untuk semua yang melayani PMI"
+    ]
+  },
+
+  meta: {
+    sources: [
+      "Kepmendikbudristek 244/M/2024 — 128 Konsentrasi Keahlian SMK",
+      "PDDikti — Program Studi Vokasi 2024",
+      "Kemnaker — Kejuruan BLK & LPK 2024",
+      "BNSP — Skema Sertifikasi 2024 (4,280 skema)",
+      "Cross-reference dengan Report A demand & Report B job role per negara"
+    ],
+    asOf: "April 2026",
+    methodology: "Mapping lulusan-job-role per Kepmen 244/2024; status assessment berdasarkan kurikulum coverage vs requirement internasional; coverage % ditentukan dari analisis silabus & MRA recognition"
+  }
+};;
+
+// ============================================================
+// TAB SWITCHING
+// ============================================================
+function switchTab(name) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === name));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === 'tab-' + name));
+  // Lazy init charts when tab opens
+  if (name === 'overview' && !window._chartsOv) initOverviewCharts();
+  if (name === 'visa' && !window._chartsVisa) initVisaCharts();
+  if (name === 'deepdive' && !window._chartsDD) initDeepDiveCharts();
+  if (name === 'curriculum' && !window._chartsCur) initCurriculumCharts();
+  // Scroll to top of section
+  window.scrollTo({ top: document.querySelector('.tab-nav').offsetTop - 50, behavior: 'smooth' });
+}
+document.querySelectorAll('.tab-btn').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
+
+// ============================================================
+// MODAL
+// ============================================================
+function openModal(eyebrow, title, subtitle, bodyHTML) {
+  document.getElementById('modalEyebrow').textContent = eyebrow;
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalSubtitle').textContent = subtitle;
+  document.getElementById('modalBody').innerHTML = bodyHTML;
+  document.getElementById('modal').classList.remove('hidden');
+}
+function closeModal() { document.getElementById('modal').classList.add('hidden'); }
+document.getElementById('modal').addEventListener('click', e => { if (e.target.id === 'modal') closeModal(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ============================================================
+// OVERVIEW CHARTS
+// ============================================================
+function initOverviewCharts() {
+  window._chartsOv = true;
+  const top10 = [
+    {label:'Hong Kong',v:99773},{label:'Taiwan',v:84581},{label:'Malaysia',v:51723},
+    {label:'Jepang',v:12720},{label:'Singapura',v:10819},{label:'Korea',v:10750},
+    {label:'Saudi',v:7759},{label:'Italia',v:3535},{label:'Brunei',v:3183},{label:'Turki',v:2630}
+  ];
+  new Chart(document.getElementById('ovChart1'), {
+    type: 'bar',
+    data: { labels: top10.map(d=>d.label), datasets:[{ label:'PMI 2024', data: top10.map(d=>d.v),
+            backgroundColor: ['#8B0000','#B22222','#DC143C','#1E3A5F','#2E5984','#3F7CAC','#5D4037','#2E7D32','#0277BD','#6A1B9A'] }] },
+    options: { indexAxis:'y', responsive:true, maintainAspectRatio:false,
+               plugins:{ legend:{display:false} }, scales:{ x:{ticks:{callback:v => (v/1000)+'K'}} } }
+  });
+
+  // Demand vs supply per family
+  const families = SUPPLY.gap.perJobFamily;
+  new Chart(document.getElementById('ovChart2'), {
+    type: 'bar',
+    data: { labels: families.map(f=>f.family.split(' &')[0]),
+      datasets: [
+        { label:'Demand PMI', data: families.map(f=>f.demandPMI), backgroundColor:'#8B0000' },
+        { label:'Supply (lulusan vokasi relevan)', data: families.map(f=>f.supply), backgroundColor:'#2E7D32' }
+      ] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}},
+               scales:{ y:{ticks:{callback:v => (v/1000)+'K'}}, x:{ticks:{font:{size:10}}} } }
+  });
+}
+
+// ============================================================
+// VISA TAB (Report A)
+// ============================================================
+function regionClass(r) {
+  if (r.includes('Asia')) return 'region-asia';
+  if (r.includes('Oseania')) return 'region-oceania';
+  if (r.includes('Eropa')) return 'region-europe';
+  if (r.includes('GCC') || r.includes('Timur Tengah')) return 'region-gcc';
+  if (r.includes('Amerika')) return 'region-namerica';
+  return 'region-asia';
+}
+function renderVisaCards(filterRegion='all', search='') {
+  const grid = document.getElementById('visaGrid');
+  const q = search.toLowerCase();
+  const filtered = countries.filter(c => {
+    if (filterRegion !== 'all' && c.region !== filterRegion) return false;
+    if (q && !c.name.toLowerCase().includes(q) && !c.visa.toLowerCase().includes(q)) return false;
+    return true;
+  });
+  grid.innerHTML = filtered.map(c => `
+    <div class="country-card bg-white rounded-xl p-5 shadow-sm" onclick='showVisaDetail("${c.code}")'>
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div><div class="text-3xl">${c.flag}</div>
+        <div class="font-bold text-gray-900 mt-1">${c.name}</div>
+        <span class="${regionClass(c.region)} text-xs px-2 py-0.5 rounded-full mt-1 inline-block">${c.region}</span></div>
+        <div class="text-right"><div class="text-xs text-gray-500">PMI 2024</div><div class="font-bold text-red-800">${c.pmi.toLocaleString('id-ID')}</div></div>
+      </div>
+      <div class="visa-pill p-2 rounded-r-lg mt-3">
+        <div class="text-xs text-red-700 font-semibold">VISA UTAMA</div>
+        <div class="text-sm font-medium text-gray-900">${c.visa}</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-3 text-xs">
+        <div><div class="text-gray-500">Gaji</div><div class="font-semibold">${c.salary}</div></div>
+        <div><div class="text-gray-500">Bahasa</div><div class="font-semibold">${c.lang}</div></div>
+        <div class="col-span-2"><div class="text-gray-500">Kuota</div><div class="font-semibold">${c.quota}</div></div>
+      </div>
+      <div class="flex flex-wrap gap-1 mt-3">${c.keyJobs.slice(0,3).map(j => `<span class="text-[10px] px-2 py-0.5 bg-red-50 text-red-800 rounded-full">${j}</span>`).join('')}</div>
+    </div>
+  `).join('');
+}
+function showVisaDetail(code) {
+  const c = countries.find(x => x.code === code);
+  if (!c) return;
+  const body = `
+    <div class="grid md:grid-cols-2 gap-4 mb-4">
+      <div class="bg-red-50 p-3 rounded-lg"><div class="text-xs text-red-600 font-semibold">SEKTOR/OKUPASI</div><div class="text-gray-800 mt-1">${c.sektor}</div></div>
+      <div class="bg-blue-50 p-3 rounded-lg"><div class="text-xs text-blue-600 font-semibold">MoU INDONESIA</div><div class="text-gray-800 mt-1">${c.indoMOU}</div></div>
+    </div>
+    <p class="text-xs uppercase font-bold text-red-800 mb-2">Jenis Visa (${c.visaTypes.length})</p>
+    <div class="space-y-3">${c.visaTypes.map(v => `
+      <div class="border border-gray-200 rounded-lg p-3">
+        <div class="font-semibold text-gray-900">${v.n}</div>
+        <p class="text-sm text-gray-600 mt-1">${v.t}</p>
+        <div class="grid md:grid-cols-2 gap-2 mt-2 text-xs">
+          <div><span class="text-gray-500">Durasi:</span> ${v.d}</div>
+          <div><span class="text-gray-500">Gaji:</span> ${v.s}</div>
+          <div class="md:col-span-2"><span class="text-gray-500">Kuota:</span> ${v.q}</div>
+          <div class="md:col-span-2"><span class="text-gray-500">Persyaratan:</span> ${v.r}</div>
+        </div>
+      </div>`).join('')}</div>
+    <div class="bg-yellow-50 p-4 rounded-lg mt-4"><div class="text-xs text-yellow-800 font-semibold">CHALLENGES</div><p class="text-sm text-gray-700 mt-1">${c.challenges}</p></div>
+  `;
+  openModal(`${c.region} · Rank PMI #${c.rank}`, `${c.flag} ${c.name}`, c.visa, body);
+}
+function initVisaCharts() {
+  window._chartsVisa = true;
+  // PMI per country
+  const top = [...countries].sort((a,b)=>b.pmi-a.pmi).slice(0,10);
+  new Chart(document.getElementById('visaChart1'), {
+    type:'bar',
+    data:{ labels: top.map(c=>c.name),
+      datasets:[{ label:'PMI 2024', data: top.map(c=>c.pmi),
+        backgroundColor: top.map((_,i)=>`hsl(${i*30+350}, 70%, ${50-i*2}%)`) }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+              scales:{ x:{ticks:{callback:v => (v/1000)+'K'}} } }
+  });
+  // Region distribution
+  const byRegion = {};
+  countries.forEach(c => { byRegion[c.region] = (byRegion[c.region]||0) + c.pmi; });
+  new Chart(document.getElementById('visaChart2'), {
+    type:'doughnut',
+    data:{ labels: Object.keys(byRegion), datasets:[{ data: Object.values(byRegion),
+      backgroundColor:['#8B0000','#B22222','#1E3A5F','#2E7D32','#F4B400','#6A1B9A'] }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{ legend:{position:'right'} } }
+  });
+}
+document.querySelectorAll('.filter-btn-a').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn-a').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderVisaCards(b.dataset.region, document.getElementById('searchA').value);
+  });
+});
+document.getElementById('searchA').addEventListener('input', e => {
+  const active = document.querySelector('.filter-btn-a.active');
+  renderVisaCards(active?.dataset.region || 'all', e.target.value);
+});
+renderVisaCards();
+
+// ============================================================
+// DEEP DIVE TAB (Report B)
+// ============================================================
+const sel = document.getElementById('ddCountry');
+sel.innerHTML = dataB.map(c => `<option value="${c.code}">${c.flag} ${c.name}</option>`).join('');
+
+function renderDD(code) {
+  const c = dataB.find(x=>x.code===code);
+  if (!c) return;
+  const totalDemand = c.demand.reduce((s,d)=>s+d.demand,0);
+  const totalGap = c.demand.reduce((s,d)=>s+d.gap,0);
+  document.getElementById('ddDetail').innerHTML = `
+    <div class="bg-white rounded-xl shadow-sm p-6 mb-6">
+      <div class="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h3 class="text-2xl font-bold text-gray-900">${c.flag} ${c.name}</h3>
+          <p class="text-sm text-gray-600 mt-2 max-w-3xl">${c.overview}</p>
+        </div>
+        <div class="text-right text-sm">
+          <div class="text-xs text-gray-500">Fulfillment Rate</div>
+          <div class="text-xl font-bold text-red-800">${c.fulfillmentRate}</div>
+        </div>
+      </div>
+      <div class="mt-4 grid md:grid-cols-3 gap-3 text-sm">
+        <div class="bg-red-50 p-3 rounded-lg"><div class="text-xs text-red-600 font-semibold">DEMAND TOTAL</div><div class="font-bold text-gray-900 mt-1">${totalDemand.toLocaleString('id-ID')}</div></div>
+        <div class="bg-yellow-50 p-3 rounded-lg"><div class="text-xs text-yellow-700 font-semibold">GAP TOTAL</div><div class="font-bold text-gray-900 mt-1">${totalGap.toLocaleString('id-ID')}</div></div>
+        <div class="bg-blue-50 p-3 rounded-lg"><div class="text-xs text-blue-700 font-semibold">SKILLED NEED</div><div class="text-xs text-gray-700 mt-1">${c.skilledNeed.slice(0,150)}...</div></div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden mb-6">
+      <div class="overflow-x-auto"><table class="w-full text-sm">
+        <thead class="bg-red-800 text-white"><tr>
+          <th class="px-3 py-2 text-left">Job Family</th>
+          <th class="px-3 py-2 text-left">Role</th>
+          <th class="px-3 py-2 text-right">Demand</th>
+          <th class="px-3 py-2 text-right">Fulfilled</th>
+          <th class="px-3 py-2 text-right">Gap</th>
+          <th class="px-3 py-2 text-right">ID Share</th>
+          <th class="px-3 py-2 text-left">Top Source</th>
+        </tr></thead>
+        <tbody class="divide-y divide-gray-100">${c.demand.map(d => `
+          <tr class="hover:bg-red-50">
+            <td class="px-3 py-2 font-semibold text-xs">${d.family}</td>
+            <td class="px-3 py-2 text-xs">${d.role}</td>
+            <td class="px-3 py-2 text-right font-mono text-red-800 text-xs">${d.demand.toLocaleString('id-ID')}</td>
+            <td class="px-3 py-2 text-right font-mono text-green-800 text-xs">${d.fulfilled.toLocaleString('id-ID')}</td>
+            <td class="px-3 py-2 text-right font-mono text-orange-700 text-xs">${d.gap.toLocaleString('id-ID')}</td>
+            <td class="px-3 py-2 text-right text-xs"><span class="${d.indonesianShare.includes('<') || parseInt(d.indonesianShare) < 5 ? 'text-red-600' : 'text-green-700'} font-bold">${d.indonesianShare}</span></td>
+            <td class="px-3 py-2 text-xs text-gray-600">${d.topSource}</td>
+          </tr>`).join('')}</tbody>
+      </table></div>
+    </div>
+
+    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded-r-lg">
+      <p class="text-xs uppercase font-bold tracking-wider text-blue-800">Competitive Landscape</p>
+      <p class="text-sm text-gray-700 mt-1">${c.competitiveLandscape}</p>
+    </div>
+  `;
+}
+sel.addEventListener('change', () => renderDD(sel.value));
+renderDD('JP');
+
+function initDeepDiveCharts() {
+  window._chartsDD = true;
+  // Aggregate demand by family
+  const fam = {};
+  dataB.forEach(c => c.demand.forEach(d => {
+    if (!fam[d.family]) fam[d.family] = 0;
+    fam[d.family] += d.demand;
+  }));
+  const sorted = Object.entries(fam).sort((a,b)=>b[1]-a[1]);
+  new Chart(document.getElementById('ddChart1'), {
+    type:'bar',
+    data:{ labels: sorted.map(x=>x[0].split(' &')[0]),
+      datasets:[{ data: sorted.map(x=>x[1]), backgroundColor:'#8B0000' }] },
+    options:{ indexAxis:'y', responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+              scales:{ x:{ticks:{callback:v => (v/1000)+'K'}} } }
+  });
+  // Indonesia share scenario
+  new Chart(document.getElementById('ddChart2'), {
+    type:'bar',
+    data:{ labels:['Jepang','Korea','Taiwan','HK','Singapura','UAE','Saudi','Australia'],
+      datasets:[
+        {label:'Indonesia (avg %)', data:[15,7,55,15,5,4,3,1.5], backgroundColor:'#8B0000'},
+        {label:'Top kompetitor (avg %)', data:[42,30,30,50,45,30,40,25], backgroundColor:'#1E3A5F'}
+      ] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}},
+              scales:{ y:{ticks:{callback:v => v+'%'}, beginAtZero:true} } }
+  });
+}
+
+// ============================================================
+// SUPPLY TAB (Report C)
+// ============================================================
+const N = n => Number(n).toLocaleString('id-ID');
+
+function showPillar(key) {
+  const detail = document.getElementById('supply-pillar-detail');
+  let html = '';
+  if (key === 'smk') {
+    const d = SUPPLY.smk;
+    html = `<div class="flex items-center gap-3 mb-4"><div class="text-3xl">🏫</div>
+      <div><h3 class="text-xl font-bold">SMK</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div><p class="text-xs uppercase font-bold text-red-800 mb-2">10 Bidang Keahlian</p>
+          <div class="space-y-1.5 max-h-72 overflow-y-auto pr-2">${d.bidangKeahlian.map(b => `
+            <div class="border-l-3 border-red-700 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${b.name}</span><span class="text-xs text-gray-500">${b.share}%</span></div>
+              <div class="text-xs text-gray-500">${b.programCount} program · ${b.konsentrasiCount} konsentrasi · ${(b.students/1000).toFixed(0)}K siswa</div>
+              ${b.relevanPMI.length ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${b.relevanPMI.join(', ')}</div>` : ''}
+            </div>`).join('')}</div></div>
+        <div><p class="text-xs uppercase font-bold text-red-800 mb-2">Top 10 Konsentrasi</p>
+          <div class="space-y-1.5 max-h-72 overflow-y-auto pr-2">${d.topPrograms.slice(0,10).map(p => `
+            <div class="bg-gray-50 p-2 rounded text-sm">
+              <div class="flex justify-between"><span class="font-medium">${p.name}</span><span class="${p.growth>=0?'text-green-700':'text-red-700'} text-xs font-mono">${p.growth>=0?'+':''}${p.growth}%</span></div>
+              <div class="text-xs text-gray-500">${(p.students/1000).toFixed(0)}K siswa · ${(p.lulusan/1000).toFixed(0)}K lulusan/th</div>
+              ${p.jobAlign.length ? `<div class="text-xs text-blue-700 mt-0.5">→ ${p.jobAlign.slice(0,2).join(' · ')}</div>` : ''}
+            </div>`).join('')}</div></div></div>
+      <div class="mt-6 grid md:grid-cols-3 gap-3 text-sm">
+        <div class="bg-red-50 p-3 rounded"><div class="text-xs text-red-700 font-bold">OUTCOMES</div>
+          <div class="mt-1 text-xs">Bekerja: <strong>${d.outcomes.bekerja}%</strong> · Lanjut: ${d.outcomes.lanjut}% · Wirausaha: ${d.outcomes.wirausaha}% · Nganggur: ${d.outcomes.nganggur}%</div></div>
+        <div class="bg-yellow-50 p-3 rounded col-span-2"><div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+          <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul></div></div>`;
+  } else if (key === 'ptv') {
+    const d = SUPPLY.ptVokasi;
+    html = `<div class="flex items-center gap-3 mb-4"><div class="text-3xl">🎓</div>
+      <div><h3 class="text-xl font-bold">PT Vokasi</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div><p class="text-xs uppercase font-bold text-blue-900 mb-2">Rumpun Ilmu</p>
+          <div class="space-y-1.5">${d.rumpunIlmu.map(r => `
+            <div class="border-l-3 border-blue-900 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${r.name}</span><span class="text-xs text-gray-500">${r.share}%</span></div>
+              <div class="text-xs text-gray-500">${(r.students/1000).toFixed(0)}K mhs · ${(r.lulusan/1000).toFixed(1)}K lulusan/th</div>
+              ${r.relevanPMI.length ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${r.relevanPMI.join(', ')}</div>` : ''}
+            </div>`).join('')}</div></div>
+        <div><p class="text-xs uppercase font-bold text-blue-900 mb-2">Top Politeknik Negeri</p>
+          <div class="space-y-1.5">${d.topPolnas.map(p => `
+            <div class="bg-gray-50 p-2 rounded text-sm">
+              <div class="font-medium">${p.name}</div>
+              <div class="text-xs text-gray-500">${p.province} · ${N(p.students)} mhs · ${p.jurusan} jurusan</div>
+              <div class="text-xs text-blue-700 mt-0.5">Fokus: ${p.focus}</div>
+            </div>`).join('')}</div></div></div>
+      <div class="mt-6 bg-yellow-50 p-3 rounded text-sm"><div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+        <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul></div>`;
+  } else if (key === 'blk') {
+    const d = SUPPLY.blk;
+    html = `<div class="flex items-center gap-3 mb-4"><div class="text-3xl">🛠️</div>
+      <div><h3 class="text-xl font-bold">BLK / LPK</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div><p class="text-xs uppercase font-bold text-green-800 mb-2">Top Kejuruan</p>
+          <div class="space-y-1.5 max-h-80 overflow-y-auto pr-2">${d.kejuruanUtama.map(k => `
+            <div class="border-l-3 border-green-700 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${k.name}</span><span class="text-xs text-gray-500">${k.ratio}%</span></div>
+              <div class="text-xs text-gray-500">${(k.peserta/1000).toFixed(1)}K peserta · ${(k.lulusan/1000).toFixed(1)}K lulusan/th</div>
+              ${k.relevanPMI.length ? `<div class="text-xs text-green-700 mt-0.5">PMI: ${k.relevanPMI.slice(0,3).join(', ')}</div>` : ''}
+            </div>`).join('')}</div></div>
+        <div><p class="text-xs uppercase font-bold text-green-800 mb-2">BP2MI-Specific</p>
+          <div class="bg-green-50 p-4 rounded-lg space-y-2 text-sm">
+            <div><strong>${N(d.bp2miSpecific.lpkAccredited)}</strong> LPK terakreditasi BP2MI dari ${N(d.overview.totalLPK)} (5,6%)</div>
+            <div><strong>${d.bp2miSpecific.lpkSSWAccredited}</strong> LPK akreditasi SSW Jepang</div>
+            <div><strong>${d.bp2miSpecific.lpkEPSAccredited}</strong> LPK akreditasi EPS Korea</div>
+            <div>Avg placement: <strong>${d.bp2miSpecific.avgPlacementRate}%</strong></div>
+          </div></div></div>
+      <div class="mt-6 bg-yellow-50 p-3 rounded text-sm"><div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+        <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul></div>`;
+  } else if (key === 'lsp') {
+    const d = SUPPLY.lsp;
+    html = `<div class="flex items-center gap-3 mb-4"><div class="text-3xl">📜</div>
+      <div><h3 class="text-xl font-bold">LSP / BNSP</h3><p class="text-sm text-gray-500">${d.overview.regulasi}</p></div></div>
+      <div class="grid md:grid-cols-2 gap-6">
+        <div><p class="text-xs uppercase font-bold text-yellow-700 mb-2">Sektor Skema</p>
+          <div class="space-y-1.5">${d.sektorSkema.map(s => `
+            <div class="border-l-3 border-yellow-600 pl-3 py-1">
+              <div class="flex justify-between"><span class="font-medium text-sm">${s.name}</span><span class="text-xs text-green-700 font-mono">+${s.growth}%</span></div>
+              <div class="text-xs text-gray-500">${s.count} skema · ${(s.asesi/1000).toFixed(0)}K asesi/th</div>
+            </div>`).join('')}</div></div>
+        <div><p class="text-xs uppercase font-bold text-yellow-700 mb-2">PMI-Specific</p>
+          <div class="bg-yellow-50 p-4 rounded-lg space-y-2 text-sm">
+            <div><strong>${d.pmiSpecific.lspP3PMI}</strong> LSP P3 fokus PMI · <strong>${d.pmiSpecific.skemaPMI}</strong> skema</div>
+            <div>Asesi PMI 2024: <strong>${N(d.pmiSpecific.asesiPMI2024)}</strong> (${d.pmiSpecific.pctTotal}% dari total)</div>
+            <div class="text-xs mt-2"><strong>Skema utama:</strong></div>
+            <ul class="text-xs space-y-0.5">${d.pmiSpecific.mainSkema.map(s=>`<li>· ${s}</li>`).join('')}</ul>
+          </div></div></div>
+      <div class="mt-6 bg-yellow-50 p-3 rounded text-sm"><div class="text-xs text-yellow-800 font-bold">CHALLENGES</div>
+        <ul class="mt-1 text-xs space-y-0.5">${d.challenges.map(c => `<li>· ${c}</li>`).join('')}</ul></div>`;
+  }
+  detail.innerHTML = html;
+}
+showPillar('smk');
+
+// Gap table
+const colorMap = { green: 'status-aligned', yellow: 'status-partial', red: 'status-missing' };
+const labelMap = { green: '✓ SURPLUS', yellow: '⚠ GAP', red: '✗ KRITIS' };
+document.getElementById('supplyGapTable').innerHTML = SUPPLY.gap.perJobFamily.map(g => `
+  <tr class="hover:bg-red-50 transition">
+    <td class="px-4 py-3 font-semibold text-gray-900">${g.family}</td>
+    <td class="px-4 py-3 text-right text-red-800 font-mono">${N(g.demandPMI)}</td>
+    <td class="px-4 py-3 text-right text-green-800 font-mono">${N(g.supply)}</td>
+    <td class="px-4 py-3 text-right text-blue-800 font-mono">${N(g.lspCert)}</td>
+    <td class="px-4 py-3"><span class="${colorMap[g.color]} text-xs px-2 py-1 rounded-full font-semibold whitespace-nowrap">${labelMap[g.color]}</span></td>
+    <td class="px-4 py-3 text-xs text-gray-600">${g.gap}</td>
+  </tr>`).join('');
+
+// Dest grid
+document.getElementById('supplyDestGrid').innerHTML = SUPPLY.gap.perDestination.map(d => {
+  const sev = d.gapPct < -80 ? 'red' : d.gapPct < -50 ? 'orange' : 'yellow';
+  const color = { red: 'border-red-500 bg-red-50', orange: 'border-orange-500 bg-orange-50', yellow: 'border-yellow-500 bg-yellow-50' }[sev];
+  return `<div class="bg-white border-l-4 ${color} rounded-r-lg p-4 shadow-sm">
+    <h3 class="font-bold text-gray-900">${d.country}</h3>
+    <div class="grid grid-cols-2 gap-2 mt-3 text-sm">
+      <div><div class="text-xs text-gray-500">Demand</div><div class="font-mono text-gray-900">${(d.demandPMI/1000).toFixed(0)}K</div></div>
+      <div><div class="text-xs text-gray-500">Siap-deploy</div><div class="font-mono text-gray-900">${(d.supplyReady/1000).toFixed(1)}K</div></div>
+    </div>
+    <div class="mt-3 pt-3 border-t border-gray-200"><div class="text-xs text-gray-500">Gap</div><div class="text-2xl font-bold text-red-700">${d.gapPct}%</div></div>
+    <p class="text-xs text-gray-600 mt-2"><strong>Bottleneck:</strong> ${d.bottleneck}</p>
+  </div>`;
+}).join('');
+
+// Readiness bars
+const ri = SUPPLY.gap.answerToMainQuestion.readinessIndex;
+const bars = [
+  { label: 'Infrastruktur', value: ri.infrastruktur, color: '#2E7D32' },
+  { label: 'Kurikulum', value: ri.kurikulum, color: '#E65100' },
+  { label: 'Bahasa target negara', value: ri.bahasa, color: '#C62828' },
+  { label: 'Sertifikasi', value: ri.sertifikasi, color: '#E65100' },
+  { label: 'MRA / Akreditasi internasional', value: ri.akreditasi_internasional, color: '#C62828' }
+];
+document.getElementById('readinessBars').innerHTML = bars.map(b => `
+  <div><div class="flex justify-between text-sm mb-1"><span class="text-gray-700">${b.label}</span>
+    <span class="font-mono font-semibold" style="color: ${b.color}">${b.value}/100</span></div>
+  <div class="index-bar"><div class="index-fill" style="width: ${b.value}%; background: ${b.color}"></div></div></div>
+`).join('');
+
+// ============================================================
+// CURRICULUM TAB (Report D)
+// ============================================================
+const statusInd = { aligned: '✓', partial: '⚠', missing: '✗' };
+const statusText = { aligned: 'ALIGNED', partial: 'PARTIAL', missing: 'MISSING' };
+
+function renderMatrix(filter='all') {
+  const rows = filter === 'all' ? CURRICULUM.jobRoles : CURRICULUM.jobRoles.filter(r => r.family === filter);
+  document.getElementById('curriculumMatrix').innerHTML = rows.map(r => `
+    <tr class="hover:bg-red-50 transition cursor-pointer" onclick="showCurriculumDetail('${r.id}')">
+      <td class="px-4 py-3 font-semibold text-gray-900">${r.role}</td>
+      <td class="px-4 py-3 text-xs text-gray-500">${r.family}</td>
+      <td class="px-4 py-3 text-right font-mono text-red-800">${N(r.demandPMI)}</td>
+      <td class="matrix-cell ${r.mapping.smk.status}" title="${r.mapping.smk.gap}">${statusInd[r.mapping.smk.status]} ${r.mapping.smk.coverage}%</td>
+      <td class="matrix-cell ${r.mapping.ptv.status}" title="${r.mapping.ptv.gap}">${statusInd[r.mapping.ptv.status]} ${r.mapping.ptv.coverage}%</td>
+      <td class="matrix-cell ${r.mapping.blk.status}" title="${r.mapping.blk.gap}">${statusInd[r.mapping.blk.status]} ${r.mapping.blk.coverage}%</td>
+      <td class="matrix-cell ${r.mapping.lsp.status}" title="${r.mapping.lsp.gap}">${statusInd[r.mapping.lsp.status]} ${r.mapping.lsp.coverage}%</td>
+    </tr>`).join('');
+}
+renderMatrix();
+
+document.querySelectorAll('.filter-pill-d').forEach(b => {
+  b.addEventListener('click', () => {
+    document.querySelectorAll('.filter-pill-d').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    renderMatrix(b.dataset.family);
+  });
+});
+
+function showCurriculumDetail(id) {
+  const r = CURRICULUM.jobRoles.find(x => x.id === id);
+  if (!r) return;
+  const lp = r.learningPath, m = r.mapping;
+  const body = `
+    <div class="grid md:grid-cols-2 gap-6 mb-6">
+      <div>
+        <p class="text-xs uppercase font-bold text-red-800 mb-2">📚 Learning Path Target</p>
+        <div class="bg-red-50 p-4 rounded-lg space-y-3 text-sm">
+          <div><p class="font-semibold text-gray-900 text-xs uppercase">Core Skills</p>
+            <ul class="mt-1 space-y-0.5 text-xs">${lp.coreSkills.map(s => `<li>· ${s}</li>`).join('')}</ul></div>
+          <div class="grid grid-cols-2 gap-2 pt-2 border-t border-red-200">
+            <div><p class="font-semibold text-xs uppercase text-gray-700">Bahasa</p><p class="text-xs">${lp.language}</p></div>
+            <div><p class="font-semibold text-xs uppercase text-gray-700">Durasi</p><p class="text-xs">${lp.durationMonths} bulan · ${lp.prakerinHours} jam</p></div>
+          </div>
+          <div class="pt-2 border-t border-red-200">
+            <p class="font-semibold text-xs uppercase text-gray-700">Sertifikasi</p>
+            <ul class="mt-1 space-y-0.5 text-xs">${lp.certifications.map(c=>`<li>· ${c}</li>`).join('')}</ul>
+          </div>
+        </div>
+      </div>
+      <div>
+        <p class="text-xs uppercase font-bold text-red-800 mb-2">📊 Mapping Status</p>
+        <div class="space-y-2">${['smk','ptv','blk','lsp'].map(k => {
+          const inst = { smk: 'SMK', ptv: 'PT Vokasi', blk: 'BLK / LPK', lsp: 'LSP / BNSP' }[k];
+          const data = m[k];
+          const fieldName = { smk: 'konsentrasi', ptv: 'jurusan', blk: 'kejuruan', lsp: 'skema' }[k];
+          return `<div class="border border-gray-200 rounded-lg p-3">
+            <div class="flex items-center justify-between mb-2">
+              <span class="font-bold text-gray-900 text-sm">${inst}</span>
+              <span class="status-${data.status} text-xs px-2 py-0.5 rounded-full font-semibold">${statusInd[data.status]} ${statusText[data.status]}</span>
+            </div>
+            <p class="text-xs text-gray-700"><strong>Mapping:</strong> ${data[fieldName] || '—'}</p>
+            <div class="mt-2 flex items-center gap-2">
+              <div class="coverage-bar flex-1"><div style="width: ${data.coverage}%; height:100%; background: ${data.status==='aligned'?'#2E7D32':data.status==='partial'?'#E65100':'#C62828'};"></div></div>
+              <span class="text-xs font-mono">${data.coverage}%</span>
+            </div>
+            <p class="text-xs text-gray-500 mt-2 italic">${data.gap}</p>
+          </div>`;
+        }).join('')}</div>
+      </div>
+    </div>`;
+  openModal(`${r.family} · ${r.jobType}`, r.role, `🎯 ${r.destinations.join(' · ')}`, body);
+}
+
+function initCurriculumCharts() {
+  window._chartsCur = true;
+  const sd = CURRICULUM.summary.byStatus;
+  new Chart(document.getElementById('curChart1'), {
+    type:'bar',
+    data:{ labels:['SMK','PT Vokasi','BLK / LPK','LSP / BNSP'],
+      datasets:[
+        {label:'✓ Aligned', data:[sd.smk_aligned, sd.ptv_aligned, sd.blk_aligned, sd.lsp_aligned], backgroundColor:'#2E7D32'},
+        {label:'⚠ Partial', data:[sd.smk_partial, sd.ptv_partial, sd.blk_partial, sd.lsp_partial], backgroundColor:'#E65100'},
+        {label:'✗ Missing', data:[sd.smk_missing, sd.ptv_missing, sd.blk_missing, sd.lsp_missing], backgroundColor:'#C62828'}
+      ] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{position:'bottom'}},
+              scales:{ x:{stacked:true}, y:{stacked:true, ticks:{stepSize:5}} } }
+  });
+  const ac = CURRICULUM.summary.averageCoverage;
+  new Chart(document.getElementById('curChart2'), {
+    type:'bar',
+    data:{ labels:['SMK','PT Vokasi','BLK / LPK','LSP / BNSP'],
+      datasets:[{ label:'Avg Coverage %', data:[ac.smk, ac.ptv, ac.blk, ac.lsp],
+        backgroundColor:['#8B0000','#1E3A5F','#2E7D32','#F4B400'] }] },
+    options:{ responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+              scales:{ y:{beginAtZero:true, max:100, ticks:{callback:v=>v+'%'}} } }
+  });
+}
+
+// Priority list
+const prioColors = ['#8B0000','#B22222','#1E3A5F','#2E7D32','#F4B400'];
+document.getElementById('priorityList').innerHTML = CURRICULUM.summary.transformationPriorities.map((p,i) => {
+  const m = p.match(/^PRIO\s*(\d+):\s*(.*)/i) || ['', i+1, p];
+  return `<div class="bg-white rounded-xl shadow-sm p-5 border-l-4" style="border-left-color: ${prioColors[i]}">
+    <div class="flex items-start gap-4">
+      <div class="text-3xl font-bold" style="color: ${prioColors[i]}">${i+1}</div>
+      <div class="flex-1">
+        <p class="text-xs uppercase font-bold tracking-wider" style="color: ${prioColors[i]}">PRIORITAS ${m[1]}</p>
+        <p class="font-semibold text-gray-900 mt-1">${m[2]}</p>
+      </div>
+    </div></div>`;
+}).join('');
+
+// Init overview charts on first load
+initOverviewCharts();
+</script>
+
+</body>
+</html>
