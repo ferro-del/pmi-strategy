@@ -1,0 +1,18 @@
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Editor
+.vscode/
+.idea/
+
+# Vercel
+.vercel/
+
+# Node (in case future tooling)
+node_modules/
+*.log
+.env
+.env.local

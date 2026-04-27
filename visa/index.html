@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pemetaan Visa Kerja PMI — 16 Negara · Strategi PMI</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<link rel="stylesheet" href="/assets/shared.css">
+</head>
+<body>
+
+<nav class="site-nav">
+  <div class="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
+    <a href="/" class="brand-mark">
+      <span class="dot"></span>
+      <span>Strategi PMI</span>
+      <span class="text-xs font-normal text-gray-500 ml-1 hidden sm:inline">· KemenP2MI</span>
+    </a>
+    <div class="flex items-center gap-1 text-sm flex-wrap">
+      <a href="/" class="">Beranda</a>
+      <a href="/visa" class="active">Pemetaan Visa</a>
+      <a href="/deep-dive" class="">Deep Dive Negara</a>
+      <a href="/#downloads" class="">Dokumen</a>
+    </div>
+  </div>
+</nav>
+
+
+<header class="gradient-header text-white shadow-lg">
+  <div class="max-w-7xl mx-auto px-6 py-10">
+    <div class="flex items-center justify-between flex-wrap gap-4">
+      <div>
+        <p class="text-sm uppercase tracking-widest text-yellow-200 font-semibold">Report A — Dashboard Interaktif</p>
+        <h1 class="text-3xl md:text-4xl font-bold mt-1">Pemetaan Visa Kerja Pekerja Vokasi</h1>
+        <p class="text-red-100 mt-2 text-sm md:text-base">16 Negara Tujuan Strategis · 69+ Jenis Visa · Update April 2026</p>
+      </div>
+      <div class="text-right text-sm">
+        <a href="/deep-dive" class="bg-white/15 hover:bg-white/25 backdrop-blur-sm px-4 py-2 rounded-lg transition inline-flex items-center gap-2">
+          <span>Lihat Deep Dive Negara</span>
+          <span>→</span>
+        </a>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- KPI ROW -->
+<section class="max-w-7xl mx-auto px-6 -mt-6 relative z-10">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+    <div class="stat-card border-t-4 border-red-700">
+      <div class="text-3xl font-bold text-red-800" id="kpi-countries">16</div>
+      <div class="text-sm text-gray-500 mt-1">Negara Tujuan</div>
+    </div>
+    <div class="stat-card border-t-4 border-blue-800">
+      <div class="text-3xl font-bold text-blue-900" id="kpi-visas">69+</div>
+      <div class="text-sm text-gray-500 mt-1">Jenis Visa</div>
+    </div>
+    <div class="stat-card border-t-4 border-green-700">
+      <div class="text-3xl font-bold text-green-800">297K</div>
+      <div class="text-sm text-gray-500 mt-1">PMI 2024 (BP2MI)</div>
+    </div>
+    <div class="stat-card border-t-4 border-yellow-600">
+      <div class="text-3xl font-bold text-yellow-700">Rp212T</div>
+      <div class="text-sm text-gray-500 mt-1">Remitansi Q3 2025 (+38.6% YoY)</div>
+    </div>
+  </div>
+</section>
+
+<!-- FILTER BAR -->
+<section class="max-w-7xl mx-auto px-6 mt-8">
+  <div class="bg-white rounded-xl shadow-sm p-4 flex flex-wrap gap-2 items-center">
+    <span class="text-sm font-semibold text-gray-600 mr-2">FILTER REGION:</span>
+    <button class="filter-btn active px-4 py-1.5 rounded-full text-sm font-medium border" data-filter="all">Semua (16)</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium border" data-filter="Asia Timur">Asia Timur (5)</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium border" data-filter="Oseania">Oseania (1)</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium border" data-filter="Eropa">Eropa (4)</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium border" data-filter="GCC">GCC/Timur Tengah (5)</button>
+    <button class="filter-btn px-4 py-1.5 rounded-full text-sm font-medium border" data-filter="Amerika">Amerika Utara (1)</button>
+    <div class="ml-auto">
+      <input id="searchBox" placeholder="🔍 Cari negara/visa/sektor..." class="px-3 py-1.5 border rounded-full text-sm w-64 focus:outline-none focus:ring-2 focus:ring-red-500">
+    </div>
+  </div>
+</section>
+
+<!-- CHARTS ROW -->
+<section class="max-w-7xl mx-auto px-6 mt-8 grid md:grid-cols-2 gap-6">
+  <div class="bg-white rounded-xl shadow-sm p-6">
+    <h3 class="font-bold text-gray-800 mb-4">📊 PMI 2024 Top 10 Negara Tujuan</h3>
+    <canvas id="chart-pmi"></canvas>
+    <p class="text-xs text-gray-500 mt-3">Sumber: BP2MI 2024 — Total 297.434 PMI</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm p-6">
+    <h3 class="font-bold text-gray-800 mb-4">💼 Komposisi Okupasi PMI 2024</h3>
+    <canvas id="chart-occ"></canvas>
+    <p class="text-xs text-gray-500 mt-3">Dominasi sektor domestic & caregiving (51%) — target shift ke vokasi formal</p>
+  </div>
+</section>
+
+<!-- COUNTRIES GRID -->
+<section class="max-w-7xl mx-auto px-6 mt-10 mb-12">
+  <h2 class="text-2xl font-bold text-gray-800 mb-2">🌍 Detail Visa per Negara</h2>
+  <p class="text-gray-600 mb-6">Klik kartu negara untuk melihat semua jenis visa, syarat, dan kuota.</p>
+  <div id="countries-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"></div>
+</section>
+
+<!-- COMPARISON TABLE -->
+<section class="max-w-7xl mx-auto px-6 mb-12">
+  <h2 class="text-2xl font-bold text-gray-800 mb-4">📋 Tabel Perbandingan Visa Utama</h2>
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <div class="scroll-x overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead class="bg-red-800 text-white">
+          <tr>
+            <th class="px-4 py-3 text-left">Negara</th>
+            <th class="px-4 py-3 text-left">Region</th>
+            <th class="px-4 py-3 text-left">Visa Utama Skilled Worker</th>
+            <th class="px-4 py-3 text-left">Kuota / Kapasitas</th>
+            <th class="px-4 py-3 text-left">Bahasa Min.</th>
+            <th class="px-4 py-3 text-right">PMI 2024</th>
+            <th class="px-4 py-3 text-left">Range Gaji</th>
+          </tr>
+        </thead>
+        <tbody id="compare-table"></tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- DETAIL MODAL -->
+<div id="modal" class="hidden fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+    <div id="modal-header" class="gradient-header text-white p-6 sticky top-0 rounded-t-2xl">
+      <div class="flex justify-between items-start">
+        <div>
+          <p class="text-xs uppercase tracking-widest text-yellow-200" id="modal-region"></p>
+          <h2 class="text-2xl font-bold mt-1" id="modal-name"></h2>
+          <p class="text-red-100 text-sm mt-1" id="modal-meta"></p>
+        </div>
+        <button onclick="document.getElementById('modal').classList.add('hidden')" class="text-white/70 hover:text-white text-3xl leading-none">&times;</button>
+      </div>
+    </div>
+    <div class="p-6" id="modal-body"></div>
+  </div>
+</div>
+
+<footer class="bg-gray-900 text-gray-400 text-xs">
+  <div class="max-w-7xl mx-auto px-6 py-6 text-center">
+    Report A — Pemetaan Visa Kerja PMI Skilled Worker Vokasi · KemenP2MI 2026 · Sumber data: ISA Jepang, MOEL Korea, MOL Taiwan, MOM Singapura, LD Hong Kong, MOHRE UAE, HRSD Saudi Arabia, IND Belanda, Home Affairs Australia, IRCC Kanada, BP2MI, ILO/IOM
+  </div>
+</footer>
+
+<script>
+const countries = [
+  {code:"JP",name:"Jepang",flag:"🇯🇵",region:"Asia Timur",pmi:12720,rank:2,salary:"Rp17-30 juta",lang:"JLPT N4",visa:"Specified Skilled Worker (SSW)",quota:"Target 800K (2029)",
+   visaTypes:[
+     {n:"Specified Skilled Worker (SSW)",t:"Pekerja vokasi siap kerja - 16 sektor",d:"SSW-1: 5 tahun (no family); SSW-2: unlimited",q:"Target 800K (2029); 284K eksisting",s:"¥160K-280K/bulan",r:"Usia 18+, JLPT N4, Skills Test, Health"},
+     {n:"Care Worker (Kaigo)",t:"Caregiver bersertifikat",d:"Indefinite (jalur PR)",q:"Tidak terbatas formal",s:"¥200K-260K/bulan",r:"Sertifikat Kaigofukushishi, JLPT N3+"},
+     {n:"Technical Intern Training (TITP)",t:"Magang teknis (akan dihapus 2027)",d:"Max 5 tahun",q:"Sedang transisi",s:"Min wage prefektur",r:"Usia 18-35, dasar Jepang"}
+   ],
+   sektor:"Nursing care, Building Cleaning, Industrial Manufacturing, Construction, Shipbuilding, Automobile Maintenance, Aviation, Accommodation, Auto Transport, Railway, Agriculture, Fisheries, Food Manufacturing, Food Service, Forestry, Timber",
+   indoMOU:"MoC 2023: target 100K pekerja Indonesia/5 tahun (70K via SSW)",
+   keyJobs:["Caregiver","Construction","Food service","Manufacturing operator","Agriculture worker","Hospitality"],
+   challenges:"Bahasa Jepang JLPT N4, biaya pelatihan tinggi, kompetisi dengan Vietnam"
+  },
+  {code:"KR",name:"Korea Selatan",flag:"🇰🇷",region:"Asia Timur",pmi:10750,rank:4,salary:"Rp24-32 juta",lang:"EPS-TOPIK",visa:"E-9 EPS",quota:"130K (2025) → 80K (2026)",
+   visaTypes:[
+     {n:"E-9 Non-Professional (EPS)",t:"Sektor labor-intensive",d:"Max 4y10m, +2y extension",q:"130K (2025), 80K (2026); Manufacturing: 72K, Shipbuilding: 5K",s:"Min wage ₩2.096.270/bulan",r:"EPS-TOPIK, usia 18-39, skills test"},
+     {n:"E-7-4 Skilled Worker",t:"Upgrade dari E-9 ke pekerja terampil",d:"Renewable, jalur PR",q:"33.000 spots (2025)",s:"Min ₩26 juta/tahun",r:"4+ tahun di E-9, K-Point 200+/300, employer rec"},
+     {n:"E-8 Seasonal Worker",t:"Pertanian/perikanan musiman",d:"Max 5 bulan",q:"75.000 (naik 7K)",s:"Min wage Korea",r:"MoU pemda, dasar Korea"},
+     {n:"E-9 Domestic Worker (Pilot)",t:"Childcare/housekeeping (Filipina+Indonesia pilot)",d:"Pilot 2024-2026",q:"Diperluas dari 100 awal",s:"Min wage Korea",r:"TESDA cert, usia 24-38, no dependents"}
+   ],
+   sektor:"Manufacturing (72K), Construction, Agriculture, Fisheries, Services (limited), Shipbuilding (5K)",
+   indoMOU:"G2G EPS sejak 2004, 17 negara mitra",
+   keyJobs:["Manufacturing operator","Welder","Painter","Mason","Agriculture worker","Fisheries deckhand"],
+   challenges:"EPS-TOPIK Korean wajib, kuota turun signifikan, no dependents"
+  },
+  {code:"TW",name:"Taiwan",flag:"🇹🇼",region:"Asia Timur",pmi:84581,rank:1,salary:"Rp10-18 juta",lang:"Mandarin dasar",visa:"Migrant Worker + Caregiver",quota:"~858K total migrant",
+   visaTypes:[
+     {n:"Migrant Worker - Industrial",t:"Manufacturing, construction, fishery",d:"Max 12 tahun",q:"Total ~858K migrant per Sep 2025; manufaktur 40% workforce, total 50%",s:"Min wage NT$28.590 (2025), NT$29.500 (2026)",r:"Health, criminal, broker, dasar Mandarin"},
+     {n:"Migrant Worker - Caregiver",t:"Pengasuh lansia/disabled (90% PMI Taiwan)",d:"Max 14 tahun",q:"Tidak terbatas; ~210K+ caregivers",s:"Live-in NT$20K+; institutional NT$28.590+",r:"TESDA cert setara, dasar Mandarin"},
+     {n:"Intermediate Skilled Foreign Worker",t:"Upgrade dari migrant worker",d:"Renewable, jalur PR",q:"25% cap akan dihapus; manufaktur min NT$33K",s:"NT$24K-33K+/bulan",r:"6+ tahun, sertifikat profesional"}
+   ],
+   sektor:"Manufacturing, Construction, Fisheries, Slaughterhouse, Caregiving (#1 sektor PMI)",
+   indoMOU:"Taiwan akan buat recruitment center di Indonesia (Q1 2026 G2G pilot)",
+   keyJobs:["Caregiver (live-in & institutional)","Manufacturing operator","Fisheries","Construction","Domestic helper"],
+   challenges:"12-14 tahun cap diprotes, broker fee tinggi, live-in caregiver tidak dilindungi LSA"
+  },
+  {code:"HK",name:"Hong Kong",flag:"🇭🇰",region:"Asia Timur",pmi:99773,rank:2,salary:"Rp10-25 juta",lang:"Cantonese/English",visa:"FDH + ESLS + CSS",quota:"30K (CSS+ESLS+TPL)",
+   visaTypes:[
+     {n:"Foreign Domestic Helper (FDH)",t:"Asisten rumah tangga (PRT)",d:"2 tahun renewable",q:"~370K+ FDH total",s:"Min HK$4.990/bulan",r:"Sertifikat domestic helper, kontrak SEC"},
+     {n:"Enhanced Supplementary Labour Scheme (ESLS)",t:"Pekerja teknis 26 sektor (cooks, waiters, retail)",d:"Max 24 bulan",q:"9.056 kuota aktif (Juni 2025)",s:"Median wage per posisi",r:"SEC, employer rekrut lokal 6 minggu, manning ratio 1:2"},
+     {n:"Construction Sector Scheme (CSS)",t:"Tukang konstruksi spesialis",d:"Sesuai kontrak proyek",q:"12.000 kuota total",s:"Median wage trade-spesifik",r:"Trade test, principal contractor proyek HK$1B+"},
+     {n:"Technical Professional List (Pilot 2025)",t:"Profesional teknis non-degree",d:"3 tahun pilot",q:"10.000 total; max 3.000/trade",s:"Median wage profesional",r:"Usia 18-40, sertifikasi trade"},
+     {n:"Transport Sector LIS",t:"Pengemudi minibus, coach, ground handler",d:"Sesuai kontrak",q:"8.000 (6.300 aviation + 1.700 PLB/coach)",s:"Median wage HK",r:"SIM non-lokal 1+ tahun, lulus driving test HK"}
+   ],
+   sektor:"Domestic, Construction, Catering, Retail, Healthcare, Aviation, Transport, 8 trades pilot",
+   indoMOU:"MoU FDH historis",
+   keyJobs:["Domestic helper","Caregiver","Junior cook","Waiter (ESLS)","Construction trades"],
+   challenges:"Dominansi PRT >95% PMI HK, upah tertekan, regulasi ketat 2025"
+  },
+  {code:"SG",name:"Singapura",flag:"🇸🇬",region:"Asia Timur",pmi:10819,rank:6,salary:"Rp19-50 juta",lang:"English dasar",visa:"WP + S Pass + EP",quota:"DRC sektoral",
+   visaTypes:[
+     {n:"Work Permit (WP)",t:"Pekerja semi-skilled 5 sektor",d:"Max 2y renewable; cap durasi total dihapus 1 Jul 2025",q:"DRC: Construction 83.3%, Marine 77.8%, Manufacturing 60%, Services 35%; total ~1.4M",s:"S$1.600-2.000/bulan",r:"Negara sumber approved, medical, levy, akomodasi"},
+     {n:"S Pass",t:"Mid-level skilled (technicians)",d:"Max 2y renewable",q:"DRC 10% services, 15% sektor lain; min S$3.300 umum (Sep 2025)",s:"Min S$3.300/bulan",r:"Diploma teknis, advertise MyCareerFuture 14 hari, levy S$650"},
+     {n:"Employment Pass (EP)",t:"Profesional/eksekutif",d:"2-3 tahun renewable, PR pathway",q:"Tidak ada DRC; min S$5.600 umum",s:"Min S$5.600/bulan",r:"Bachelor+, COMPASS 40+ poin"},
+     {n:"MDW (Migrant Domestic Worker)",t:"Asisten rumah tangga",d:"2 tahun renewable",q:"~290K+ MDW",s:"Min S$600/bulan negotiated",r:"Health, agency, employer income S$3K+"}
+   ],
+   sektor:"Construction, Manufacturing, Marine Shipyard, Process, Services + Domestic",
+   indoMOU:"MoU MDW; bilateral training konstruksi/marine",
+   keyJobs:["MDW","Construction (welder, fitter)","Shipyard worker","F&B service","Cleaner"],
+   challenges:"DRC ketat, levy tinggi, no PR pathway WP"
+  },
+  {code:"AU",name:"Australia",flag:"🇦🇺",region:"Oseania",pmi:1500,rank:12,salary:"Rp50-100 juta",lang:"IELTS 5.0+",visa:"Skills in Demand 482",quota:"Tidak ada quota num.",
+   visaTypes:[
+     {n:"Skills in Demand 482 - Core Skills",t:"Pekerja terampil di Core Skills Occupation List",d:"4 tahun, jalur PR setelah 2 tahun (Subclass 186)",q:"Tidak ada quota; LMT wajib; 456 okupasi CSOL",s:"Min CSIT AUD 73.150/tahun",r:"Job offer + sponsor, 1+ tahun pengalaman, IELTS 5.0, skill assessment"},
+     {n:"Skills in Demand - Specialist",t:"Profesional spesialis (NOT trades)",d:"4 tahun",q:"Processing 7 hari",s:"Min AUD 141.210/tahun",r:"Tidak ada occupation list, salary tinggi"},
+     {n:"Skills in Demand - Essential (2026)",t:"Sektor esensial low-wage",d:"TBD",q:"Akan diumumkan 2026",s:"Below CSIT",r:"TBD - via labour agreement"},
+     {n:"Working Holiday 462",t:"Backpacker muda + kerja sambilan",d:"1 tahun renewable",q:"5.000/tahun untuk Indonesia",s:"Award rates",r:"Usia 18-30, S1, IELTS 4.5+, dana AUD 5K+"}
+   ],
+   sektor:"Healthcare, ICT, Construction & Trades, Engineering, Hospitality, Childcare (NEW), Aged Care",
+   indoMOU:"IA-CEPA kerangka 482; PALM tidak berlaku Indonesia",
+   keyJobs:["Childcare worker (NEW 2024)","Aged care worker","Cook/Chef","Mechanic","Welder","Hospitality"],
+   challenges:"Skill assessment ketat, IELTS, biaya tinggi, English dominance"
+  },
+  {code:"DE",name:"Jerman",flag:"🇩🇪",region:"Eropa",pmi:850,rank:25,salary:"Rp40-75 juta",lang:"German A2-B2",visa:"Fachkräfte + Chancenkarte",quota:"Tidak ada quota",
+   visaTypes:[
+     {n:"Skilled Worker Visa (Fachkräfte)",t:"Pekerja vokasi 2+ tahun pelatihan diakui",d:"4 tahun, PR setelah 2 tahun (21 bulan B1)",q:"Tidak ada quota; demand 400K skilled/tahun",s:"Market rate ~€2.500-4.500/bulan",r:"Pelatihan vokasi 2+ tahun ZAB-recognized, kontrak, A2 German min"},
+     {n:"EU Blue Card",t:"Lulusan PT untuk high-skilled",d:"4 tahun, PR 21-33 bulan",q:"Tidak ada quota",s:"€50.700/tahun (2026); €45.934 shortage occupations",r:"Bachelor degree, kontrak high-skilled"},
+     {n:"Chancenkarte (Opportunity Card)",t:"Job-seeker visa points-based",d:"12 bulan",q:"11.497 visa terbit (Juni 2024-Juni 2025); India 32%",s:"Saat job-seeking max 20 jam/minggu",r:"Vokasi 2+ tahun ATAU bachelor; A1 German ATAU B2 English; 6+ poin"},
+     {n:"Ausbildung (Vocational Training)",t:"Magang vokasi 3 tahun",d:"3 tahun training + work post-graduation",q:"Open",s:"€800-1.200/bulan stipend",r:"B1 German, kontrak pelatihan"}
+   ],
+   sektor:"Healthcare/nursing, IT, Construction trades, Hospitality, Manufacturing, Automotive, Electricians, Welders",
+   indoMOU:"Triple Win Programme (perawat); G2G nursing pilot",
+   keyJobs:["Nurse/Pflegekraft","Caregiver","Mechatronics technician","Welder","Hotel/restaurant trades","Bakers/butchers"],
+   challenges:"Bahasa Jerman B1/B2, ZAB recognition lambat, biaya pelatihan, kompetisi global"
+  },
+  {code:"IT",name:"Italia",flag:"🇮🇹",region:"Eropa",pmi:3535,rank:20,salary:"Rp22-35 juta",lang:"Italiano A2-B1",visa:"Decreto Flussi",quota:"164.850 (2026)",
+   visaTypes:[
+     {n:"Decreto Flussi - Lavoro Subordinato Stagionale",t:"Pertanian, peternakan, pariwisata seasonal",d:"Max 9 bulan; multi-year",q:"88.000 (2026); 47K agriculture via konfederasi",s:"Sesuai CCNL sektoral",r:"Job offer + nulla osta, click day, MoU prioritas"},
+     {n:"Decreto Flussi - Lavoro Non Stagionale",t:"Pekerja tetap industri (incl. caregiver)",d:"1-2 tahun renewable, jalur PR",q:"76.850 (2026); 13.600 colf/badanti",s:"Sesuai CCNL",r:"Job offer pre-existing, click day, employer sponsor"},
+     {n:"EU Blue Card",t:"High-skilled professionals",d:"2 tahun renewable",q:"Out of quota",s:"Min €33.500/tahun",r:"Bachelor degree, kontrak, 1.5x average salary"}
+   ],
+   sektor:"Agriculture (47K seasonal), Tourism, Construction, Transport, Manufacturing, F&B, Healthcare, Caregiving (13.6K)",
+   indoMOU:"Indonesia disebut prioritas Decreto Flussi 2026-2028 (pending bilateral)",
+   keyJobs:["Caregiver (badanti)","Domestic worker (colf)","Agriculture worker","Hospitality","Cook"],
+   challenges:"Click day kompetitif, bahasa Italia, konversi <10% kuota jadi visa"
+  },
+  {code:"NL",name:"Belanda",flag:"🇳🇱",region:"Eropa",pmi:850,rank:30,salary:"Rp75-100 juta",lang:"English fluent",visa:"HSM + GVVA",quota:"Tidak ada quota",
+   visaTypes:[
+     {n:"Highly Skilled Migrant (Kennismigrant)",t:"Profesional terampil tinggi",d:"5 tahun (kontrak)",q:"Tidak ada quota",s:"€5.688/bulan (30+); €4.171 (<30); €2.989 (recent grad)",r:"Job offer recognized sponsor, salary threshold"},
+     {n:"GVVA (Single Permit)",t:"Pekerja non-EU >90 hari (sangat ketat)",d:">90 hari",q:"Labour market test EU-wide",s:"Sesuai market",r:"Labour market test, kontrak, sponsor"},
+     {n:"EU Blue Card",t:"High-skilled profesional",d:"5 tahun",q:"Tidak ada quota",s:"€5.688/bulan threshold",r:"Bachelor degree, kontrak high-skilled"},
+     {n:"Seasonal Work Permit (TWV)",t:"Pertanian musiman terbatas",d:"Max 24 minggu",q:"Sesuai UWV; sangat terbatas",s:"Min wage Belanda",r:"Tidak ada workers EU"}
+   ],
+   sektor:"IT, Engineering (HSM), Maritime/Shipping, Healthcare (limited)",
+   indoMOU:"Bilateral health worker (perawat) program, sangat terbatas",
+   keyJobs:["Highly skilled IT","Engineering","Nursing (limited)","Maritime/Shipping"],
+   challenges:"Labour market test ketat, GVVA hampir mustahil untuk vokasi"
+  },
+  {code:"TR",name:"Turki",flag:"🇹🇷",region:"Eropa",pmi:2630,rank:10,salary:"Rp4-20 juta",lang:"Turkish dasar",visa:"Çalışma İzni",quota:"5:1 ratio",
+   visaTypes:[
+     {n:"Work Permit (Çalışma İzni)",t:"Pekerja umum termasuk vokasi",d:"1 tahun renewable",q:"Rasio 5 lokal:1 asing per perusahaan",s:"~5x min wage profesional, ~1.5x skilled",r:"Sponsor employer, modal sahip TRY 100K, izin MLSS"},
+     {n:"Turquoise Card (Turkuaz Kart)",t:"Highly qualified professionals + entrepreneurs",d:"Indefinite (3 tahun probation)",q:"Selektif",s:"Tidak ada minimum",r:"Prestasi, kontribusi ekonomi"},
+     {n:"Independent Work Permit",t:"Self-employed setelah 5 tahun",d:"Indefinite",q:"N/A",s:"Self-funded",r:"5 tahun work permit, modal"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir, nanny",d:"1 tahun",q:"Bilateral G2G (Indonesia salah satu)",s:"~$300-500/bulan",r:"Sponsor keluarga Turki"}
+   ],
+   sektor:"Konstruksi, Hospitality, Healthcare, Manufacturing, Domestic services",
+   indoMOU:"G2G domestic worker; spike Turki sebagai destinasi PMI sejak 2023",
+   keyJobs:["Domestic helper","Caregiver","Hospitality","F&B"],
+   challenges:"Inflasi tinggi (lira melemah), bahasa Turki, gaji riil rendah"
+  },
+  {code:"SA",name:"Arab Saudi",flag:"🇸🇦",region:"GCC",pmi:7759,rank:5,salary:"Rp6-50 juta",lang:"Arabic/English",visa:"3-Tier System",quota:"Saudization (Nitaqat)",
+   visaTypes:[
+     {n:"Employment Visa - High-Skilled (Tier 1)",t:"Profesional/eksekutif (engineers, doctors, IT)",d:"1 tahun renewable, Iqama",q:"Sistem klasifikasi baru efektif Juli/Agustus 2025; occupational groups 1-3",s:"Tinggi, threshold per sektor",r:"Education, experience, professional accreditation, points-based"},
+     {n:"Employment Visa - Skilled (Tier 2)",t:"Teknisi, supervisor, administrasi",d:"1 tahun renewable, Iqama",q:"Lihat Saudization (Nitaqat) ratios; groups 4-6",s:"Mid-tier",r:"Pelatihan vokasi, sertifikat, pengalaman"},
+     {n:"Employment Visa - Basic (Tier 3)",t:"Pekerja manual labor",d:"1 tahun renewable, Iqama",q:"Age cap 60 tahun; groups 7-9",s:"Lower-tier",r:"Health, basic skills"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir keluarga",d:"2 tahun",q:"Sangat besar, ratusan ribu setahun",s:"SAR 1.500-2.000/bulan",r:"Sponsor keluarga Saudi, MoU bilateral"},
+     {n:"Premium Residency",t:"Long-term tanpa sponsor",d:"Permanent atau renewable",q:"Selektif",s:"N/A",r:"Investment SAR 800K+ ATAU profesional unggul"},
+     {n:"Temporary Work Visit Visa (TWVV)",t:"Project-based 90 hari",d:"Max 90 hari multi-entry",q:"Employer beli kuota",s:"Project rate",r:"Employer sponsor, project tertentu"}
+   ],
+   sektor:"Vision 2030 mega-projects (NEOM, Red Sea), Healthcare, Construction, Hospitality, Domestic",
+   indoMOU:"MoU bilateral (haji workers, healthcare); Vision 2030 Saudization",
+   keyJobs:["Domestic helper","Driver","Caregiver","Construction","Hospitality (NEOM)"],
+   challenges:"Kafala (sedang reform), Saudization (Nitaqat), klasifikasi 3-tier baru 2025"
+  },
+  {code:"AE",name:"UAE",flag:"🇦🇪",region:"GCC",pmi:4200,rank:8,salary:"Rp7-65 juta",lang:"English/Arabic",visa:"4-Tier MOHRE",quota:"Emiratisation 50+ employee",
+   visaTypes:[
+     {n:"Standard Employment Visa (MOHRE)",t:"Pekerja semua skill level (4 kategori)",d:"2 tahun (3 untuk skilled), Emirates ID",q:"Tidak ada quota; Emiratisation untuk perusahaan 50+",s:"Skill Level 1: AED 4K+; Level 4: AED 2.5K+",r:"Job offer, MOHRE skill class, medical, biometric"},
+     {n:"Green Visa (5-Year Self-Sponsored)",t:"Skilled professional/freelancer",d:"5 tahun renewable",q:"Tidak ada quota",s:"Min AED 15K/bulan",r:"Bachelor degree, skill level 1-3, gaji"},
+     {n:"Golden Visa (10-Year)",t:"Investor, entrepreneur, talenta",d:"10 tahun renewable",q:"Selektif",s:"Min AED 30K/bulan",r:"Investment AED 2M ATAU specialized talent"},
+     {n:"Domestic Worker Visa (Tadbeer)",t:"PRT, sopir, nanny",d:"2 tahun",q:"Tidak terbatas via Tadbeer",s:"AED 1.5-3K/bulan",r:"Sponsor income AED 25K+, akomodasi, agency Tadbeer"},
+     {n:"Mission Visa (Project)",t:"Pekerja proyek temporer",d:"Short-term",q:"Project-based",s:"Project rate",r:"Employer mission visa application"}
+   ],
+   sektor:"Hospitality, Construction, Healthcare, Domestic, IT, Services",
+   indoMOU:"Bilateral domestic worker; Indonesia Investment Authority partnership",
+   keyJobs:["Domestic helper","Driver","Hospitality (Dubai)","Construction","Healthcare","Beauty/Salon"],
+   challenges:"Kafala system; biaya hidup tinggi; persaingan dengan Filipina/India"
+  },
+  {code:"QA",name:"Qatar",flag:"🇶🇦",region:"GCC",pmi:1800,rank:13,salary:"Rp5-50 juta",lang:"English/Arabic",visa:"Work Residence Permit",quota:"Qatarization",
+   visaTypes:[
+     {n:"Work Residence Permit (RP)",t:"Pekerja semua level",d:"1-3 tahun renewable",q:"Tidak ada quota numerik; Qatarization",s:"Bervariasi (post-WC reforms)",r:"Job offer, sponsor, medical, biometric, kontrak MOL approved"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir, nanny",d:"2 tahun",q:"Tidak terbatas",s:"QAR 1.000-2.000/bulan",r:"Sponsor keluarga Qatar"},
+     {n:"Project-Based Visa",t:"Konstruksi/proyek besar",d:"Sesuai project",q:"Project employer-based",s:"Project rates",r:"Project sponsor"}
+   ],
+   sektor:"Konstruksi (Lusail, Education City), Hospitality, Healthcare, Services post-World Cup",
+   indoMOU:"Bilateral, terutama domestic worker dan healthcare",
+   keyJobs:["Domestic helper","Hospitality","Healthcare (nurse)","Construction","Driver"],
+   challenges:"Kafala (reformed 2017+ WC), bahasa, biaya tinggi"
+  },
+  {code:"BH",name:"Bahrain",flag:"🇧🇭",region:"GCC",pmi:600,rank:15,salary:"Rp4-40 juta",lang:"English/Arabic",visa:"LMRA + Flexi",quota:"Bahrainization",
+   visaTypes:[
+     {n:"Standard Work Visa (LMRA)",t:"Pekerja semua level",d:"2 tahun renewable",q:"Bahrainization quota per sektor",s:"Bervariasi",r:"LMRA work permit, sponsor, medical"},
+     {n:"Flexi Work Permit (UNIQUE)",t:"Self-sponsored, switch employer",d:"1-2 tahun",q:"Selektif",s:"Self-arranged",r:"Existing residency, fee BHD 200/tahun"},
+     {n:"Domestic Worker Visa",t:"PRT, sopir",d:"2 tahun",q:"Tidak terbatas",s:"BHD 100-150/bulan",r:"Sponsor keluarga"}
+   ],
+   sektor:"Banking, Hospitality, Manufacturing, Construction, Domestic",
+   indoMOU:"Bilateral domestic worker (limited)",
+   keyJobs:["Domestic helper","Hospitality","Healthcare","Beauty/Salon"],
+   challenges:"Pasar kecil, dominansi Asia Selatan"
+  },
+  {code:"KW",name:"Kuwait",flag:"🇰🇼",region:"GCC",pmi:550,rank:18,salary:"Rp3-35 juta",lang:"English/Arabic",visa:"Article 18 + 20",quota:"Kuwaitization",
+   visaTypes:[
+     {n:"Article 18 Work Visa (Private)",t:"Pekerja sektor swasta",d:"1-3 tahun renewable",q:"Kuwaitization (target lokal)",s:"Bervariasi",r:"Sponsor private, kontrak, medical, fee KWD 150 (Jan 2025)"},
+     {n:"Article 17 Work Visa (Government)",t:"Sektor pemerintah",d:"Sesuai kontrak",q:"Government allocation",s:"Government scale",r:"Sponsor instansi pemerintah, residency form"},
+     {n:"Visa 20 - Domestic Worker",t:"PRT, sopir, koki",d:"2 tahun",q:"Tidak terbatas",s:"KWD 60-100/bulan",r:"Sponsor citizen, salary cert, lease"}
+   ],
+   sektor:"Lintas; private/public; domestic dominan",
+   indoMOU:"Indonesia masih moratorium PRT ke Kuwait sejak 2009",
+   keyJobs:["Healthcare (nurse)","Hospitality","Construction"],
+   challenges:"Moratorium PRT, biaya & gaji rendah, Kuwaitization"
+  },
+  {code:"CA",name:"Kanada",flag:"🇨🇦",region:"Amerika",pmi:700,rank:20,salary:"Rp45-80 juta",lang:"IELTS CLB 4-5",visa:"TFWP + FSTP",quota:"82K (2025)",
+   visaTypes:[
+     {n:"TFWP - High-Wage Stream",t:"Pekerja >median wage provinsi",d:"1-2 tahun (max 4 tahun cumulative)",q:"Target 82K (2025); sudah terlampaui",s:"Diatas median wage provinsi",r:"Positive LMIA, IELTS, kontrak"},
+     {n:"TFWP - Low-Wage Stream",t:"Pekerja <median wage",d:"Max 1 tahun (recent reforms)",q:"10% cap workforce per perusahaan",s:"Below median",r:"Positive LMIA, akomodasi disediakan"},
+     {n:"TFWP - Agricultural Stream",t:"Buruh tani non-seasonal",d:"Max 2 tahun",q:"Sektor prioritas; LMIA exemption parsial",s:"Above provincial min wage",r:"On-farm primary agriculture, NOC tertentu"},
+     {n:"Federal Skilled Trades (FSTP)",t:"Tukang vokasi PR pathway",d:"PR (permanent residency)",q:"Selektif via Express Entry (CRS 350-450)",s:"Bervariasi; offer 1+ tahun ATAU sertifikat Kanada",r:"2+ tahun pengalaman, NOC TEER 2-3, IELTS CLB 5/4, sertifikat"},
+     {n:"Caregiver Program",t:"Caregiver dengan PR pathway",d:"PR pathway after 2 tahun",q:"2.750/year (closed, akan reopen)",s:"Above min wage",r:"1+ tahun pengalaman, CLB 5, secondary school"}
+   ],
+   sektor:"Healthcare, Construction, Trades, Agriculture, Caregiving, Hospitality",
+   indoMOU:"Limited bilateral; Atlantic Immigration Program peluang",
+   keyJobs:["Caregiver","Cook/Chef","Welder","Mechanic","Healthcare aide","Truck driver"],
+   challenges:"LMIA proses lambat, IELTS CLB requirements, biaya tinggi, jauh"
+  }
+];
+
+// RENDER
+function regionClass(r) {
+  if (r.includes('Asia')) return 'region-asia';
+  if (r.includes('Oseania')) return 'region-oceania';
+  if (r.includes('Eropa')) return 'region-europe';
+  if (r.includes('GCC')) return 'region-gcc';
+  if (r.includes('Amerika')) return 'region-namerica';
+  return '';
+}
+
+function renderCards(filter='all', search='') {
+  const grid = document.getElementById('countries-grid');
+  let filtered = countries;
+  if (filter !== 'all') filtered = filtered.filter(c => c.region.includes(filter) || (filter === 'Amerika' && c.region.includes('Amerika')));
+  if (search) {
+    const q = search.toLowerCase();
+    filtered = filtered.filter(c => 
+      c.name.toLowerCase().includes(q) ||
+      c.visa.toLowerCase().includes(q) ||
+      c.sektor.toLowerCase().includes(q) ||
+      c.visaTypes.some(v => v.n.toLowerCase().includes(q) || v.t.toLowerCase().includes(q))
+    );
+  }
+  
+  grid.innerHTML = filtered.map(c => `
+    <div class="country-card bg-white rounded-xl shadow-sm overflow-hidden cursor-pointer" onclick="showDetail('${c.code}')">
+      <div class="p-5">
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="text-3xl mb-1">${c.flag}</div>
+            <h3 class="font-bold text-lg text-gray-900">${c.name}</h3>
+          </div>
+          <span class="text-xs px-2 py-1 rounded-full ${regionClass(c.region)} font-semibold">${c.region.replace('/Timur Tengah','').replace('/Timur','')}</span>
+        </div>
+        <div class="mt-4 grid grid-cols-2 gap-2 text-xs">
+          <div class="bg-gray-50 p-2 rounded"><div class="text-gray-500">PMI 2024</div><div class="font-bold text-gray-900">${c.pmi.toLocaleString('id-ID')}</div></div>
+          <div class="bg-gray-50 p-2 rounded"><div class="text-gray-500">Visa Types</div><div class="font-bold text-gray-900">${c.visaTypes.length} jenis</div></div>
+          <div class="bg-gray-50 p-2 rounded col-span-2"><div class="text-gray-500">Visa Utama</div><div class="font-semibold text-red-800 text-sm truncate">${c.visa}</div></div>
+        </div>
+        <div class="mt-3 text-xs text-gray-600 italic">💰 ${c.salary} · 🗣️ ${c.lang}</div>
+        <div class="mt-3 pt-3 border-t flex flex-wrap gap-1">
+          ${c.keyJobs.slice(0,3).map(j => `<span class="text-[10px] px-2 py-0.5 bg-red-50 text-red-800 rounded-full">${j}</span>`).join('')}
+          ${c.keyJobs.length > 3 ? `<span class="text-[10px] px-2 py-0.5 bg-gray-100 text-gray-600 rounded-full">+${c.keyJobs.length - 3}</span>` : ''}
+        </div>
+      </div>
+    </div>
+  `).join('');
+  
+  if (filtered.length === 0) {
+    grid.innerHTML = '<div class="col-span-3 text-center py-12 text-gray-400">Tidak ada negara yang cocok dengan filter/pencarian.</div>';
+  }
+}
+
+function renderCompareTable() {
+  const tbody = document.getElementById('compare-table');
+  tbody.innerHTML = countries.map((c, idx) => {
+    const v = c.visaTypes.find(x => !x.n.toLowerCase().includes('domestic') && !x.n.toLowerCase().includes('mdw') && !x.n.toLowerCase().includes('fdh') && !x.n.toLowerCase().includes('au pair')) || c.visaTypes[0];
+    return `
+      <tr class="border-b hover:bg-red-50 ${idx % 2 === 0 ? 'bg-white' : 'bg-amber-50/30'}">
+        <td class="px-4 py-3 font-semibold">${c.flag} ${c.name}</td>
+        <td class="px-4 py-3"><span class="text-xs px-2 py-1 rounded-full ${regionClass(c.region)}">${c.region.replace('/Timur Tengah','').replace('/Timur','')}</span></td>
+        <td class="px-4 py-3 text-gray-700">${v.n}</td>
+        <td class="px-4 py-3 text-xs text-gray-600">${v.q.length > 60 ? v.q.substring(0, 60) + '...' : v.q}</td>
+        <td class="px-4 py-3 text-xs">${c.lang}</td>
+        <td class="px-4 py-3 text-right font-mono">${c.pmi.toLocaleString('id-ID')}</td>
+        <td class="px-4 py-3 text-xs">${c.salary}</td>
+      </tr>
+    `;
+  }).join('');
+}
+
+function showDetail(code) {
+  const c = countries.find(x => x.code === code);
+  document.getElementById('modal').classList.remove('hidden');
+  document.getElementById('modal-region').textContent = c.region;
+  document.getElementById('modal-name').textContent = c.flag + ' ' + c.name;
+  document.getElementById('modal-meta').textContent = `${c.visaTypes.length} jenis visa · PMI 2024: ${c.pmi.toLocaleString('id-ID')} · Peringkat sumber: #${c.rank} · Range gaji: ${c.salary}`;
+  
+  document.getElementById('modal-body').innerHTML = `
+    <div class="space-y-4">
+      <div class="grid grid-cols-2 gap-3 text-sm">
+        <div class="bg-red-50 p-3 rounded-lg"><div class="text-xs text-red-600 font-semibold">SEKTOR/OKUPASI</div><div class="text-gray-800 mt-1">${c.sektor}</div></div>
+        <div class="bg-blue-50 p-3 rounded-lg"><div class="text-xs text-blue-600 font-semibold">MoU INDONESIA</div><div class="text-gray-800 mt-1">${c.indoMOU}</div></div>
+      </div>
+      
+      <div>
+        <h4 class="font-bold text-gray-800 mb-3">📋 Daftar Lengkap Visa Kerja (${c.visaTypes.length} jenis)</h4>
+        <div class="space-y-3">
+          ${c.visaTypes.map((v, i) => `
+            <div class="visa-pill p-4 rounded-lg">
+              <div class="font-bold text-red-900 mb-2">${i+1}. ${v.n}</div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                <div><span class="font-semibold text-gray-600">🎯 Target:</span> <span class="text-gray-800">${v.t}</span></div>
+                <div><span class="font-semibold text-gray-600">⏳ Durasi:</span> <span class="text-gray-800">${v.d}</span></div>
+                <div><span class="font-semibold text-gray-600">📊 Kuota:</span> <span class="text-gray-800">${v.q}</span></div>
+                <div><span class="font-semibold text-gray-600">💵 Salary:</span> <span class="text-gray-800">${v.s}</span></div>
+                <div class="md:col-span-2"><span class="font-semibold text-gray-600">📜 Persyaratan:</span> <span class="text-gray-800">${v.r}</span></div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+        <div class="bg-green-50 p-4 rounded-lg">
+          <div class="text-xs font-semibold text-green-700 mb-2">💼 JOB UNGGULAN INDONESIA</div>
+          <div class="flex flex-wrap gap-1">${c.keyJobs.map(j => `<span class="text-xs px-2 py-1 bg-white rounded-full">${j}</span>`).join('')}</div>
+        </div>
+        <div class="bg-yellow-50 p-4 rounded-lg">
+          <div class="text-xs font-semibold text-yellow-700 mb-2">⚠️ TANTANGAN KUNCI</div>
+          <div class="text-gray-800 text-sm">${c.challenges}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// EVENTS
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderCards(btn.dataset.filter, document.getElementById('searchBox').value);
+  });
+});
+
+document.getElementById('searchBox').addEventListener('input', e => {
+  const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+  renderCards(activeFilter, e.target.value);
+});
+
+document.getElementById('modal').addEventListener('click', (e) => {
+  if (e.target.id === 'modal') document.getElementById('modal').classList.add('hidden');
+});
+
+// CHARTS
+const pmiData = [
+  {name:'Hong Kong',v:99773},{name:'Taiwan',v:84581},{name:'Malaysia',v:51723},
+  {name:'Jepang',v:12720},{name:'Singapura',v:10819},{name:'Korea Selatan',v:10750},
+  {name:'Arab Saudi',v:7759},{name:'Italia',v:3535},{name:'Brunei',v:3183},{name:'Turki',v:2630}
+];
+
+new Chart(document.getElementById('chart-pmi'), {
+  type:'bar',
+  data:{
+    labels: pmiData.map(d=>d.name),
+    datasets:[{
+      label:'Penempatan PMI 2024',
+      data: pmiData.map(d=>d.v),
+      backgroundColor: pmiData.map((_,i) => `hsl(${i*30 + 350}, 70%, ${50 - i*2}%)`),
+      borderRadius: 6
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:true,
+    plugins:{legend:{display:false}},
+    scales:{y:{beginAtZero:true,ticks:{callback:v=>v.toLocaleString('id-ID')}}, x:{ticks:{font:{size:10}}}}
+  }
+});
+
+const occData = [
+  {name:'Domestic Worker (PRT/PLRT)',v:100096},
+  {name:'Caregiver',v:52029},
+  {name:'General Worker',v:22527},
+  {name:'Plantation Worker',v:20665},
+  {name:'Lainnya (formal & informal)',v:102117}
+];
+
+new Chart(document.getElementById('chart-occ'), {
+  type:'doughnut',
+  data:{
+    labels: occData.map(d=>d.name),
+    datasets:[{
+      data: occData.map(d=>d.v),
+      backgroundColor: ['#8B0000','#B22222','#DC143C','#F4B400','#1E3A5F']
+    }]
+  },
+  options:{
+    responsive:true, maintainAspectRatio:true,
+    plugins:{legend:{position:'bottom',labels:{font:{size:11}}}}
+  }
+});
+
+renderCards();
+renderCompareTable();
+</script>
+</body>
+</html>

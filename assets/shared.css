@@ -1,0 +1,215 @@
+/* ========================================
+   PMI Strategy — Shared Brand Stylesheet
+   Indonesian flag-inspired palette
+   ======================================== */
+
+:root {
+  --pmi-red-darkest: #6B0000;
+  --pmi-red-dark: #8B0000;
+  --pmi-red: #B22222;
+  --pmi-red-light: #DC143C;
+  --pmi-navy: #1E3A5F;
+  --pmi-gold: #F4B400;
+  --pmi-cream: #FAFAF7;
+  --pmi-paper: #FFFFFF;
+  --pmi-ink: #1A1A1A;
+  --pmi-muted: #6B7280;
+}
+
+body {
+  font-family: 'Segoe UI', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background: var(--pmi-cream);
+  color: var(--pmi-ink);
+}
+
+.gradient-header {
+  background: linear-gradient(135deg, #8B0000 0%, #B22222 50%, #DC143C 100%);
+}
+
+.gradient-hero {
+  background: linear-gradient(135deg, #6B0000 0%, #8B0000 60%, #B22222 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.gradient-hero::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  right: -10%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(244, 180, 0, 0.18) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.gradient-hero::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  left: -10%;
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* Site nav */
+.site-nav {
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid #E5E7EB;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+}
+
+.site-nav a {
+  color: var(--pmi-ink);
+  font-weight: 500;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.15s;
+  font-size: 0.9rem;
+}
+
+.site-nav a:hover {
+  background: #FFF1F1;
+  color: var(--pmi-red-dark);
+}
+
+.site-nav a.active {
+  background: var(--pmi-red-dark);
+  color: white;
+}
+
+.brand-mark {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-weight: 700;
+  color: var(--pmi-red-dark);
+}
+
+.brand-mark .dot {
+  width: 10px;
+  height: 10px;
+  background: var(--pmi-gold);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* Cards */
+.feature-card {
+  background: white;
+  border-radius: 1rem;
+  padding: 2rem;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
+  border: 1px solid #F3F4F6;
+}
+
+.feature-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(139, 0, 0, 0.12);
+  border-color: var(--pmi-red);
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.country-card {
+  transition: all 0.2s ease-in-out;
+}
+
+.country-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(139, 0, 0, 0.15);
+}
+
+.visa-pill {
+  background: #FFF8F0;
+  border-left: 3px solid var(--pmi-red-dark);
+}
+
+/* Region badges */
+.region-asia { background: #FFEBEE; color: #C62828; border: 1px solid #FFCDD2; }
+.region-oceania { background: #E1F5FE; color: #0277BD; border: 1px solid #B3E5FC; }
+.region-europe { background: #E8F5E9; color: #2E7D32; border: 1px solid #C8E6C9; }
+.region-gcc { background: #EFEBE9; color: #5D4037; border: 1px solid #D7CCC8; }
+.region-namerica { background: #F3E5F5; color: #6A1B9A; border: 1px solid #E1BEE7; }
+
+.filter-btn { transition: all 0.15s; }
+.filter-btn.active { background: var(--pmi-red-dark); color: white; }
+
+details summary {
+  cursor: pointer;
+  list-style: none;
+}
+details summary::-webkit-details-marker { display: none; }
+details summary::after { content: '▾'; float: right; transition: transform 0.2s; }
+details[open] summary::after { transform: rotate(180deg); }
+
+.scroll-x::-webkit-scrollbar { height: 6px; }
+.scroll-x::-webkit-scrollbar-thumb { background: var(--pmi-red-dark); border-radius: 3px; }
+
+/* Download buttons */
+.download-tile {
+  background: white;
+  border: 1px solid #E5E7EB;
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  transition: all 0.15s;
+  text-decoration: none;
+  color: var(--pmi-ink);
+}
+
+.download-tile:hover {
+  border-color: var(--pmi-red);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(139, 0, 0, 0.08);
+}
+
+.file-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.7rem;
+  color: white;
+  flex-shrink: 0;
+}
+
+.file-icon.docx { background: #2B579A; }
+.file-icon.pptx { background: #D24726; }
+.file-icon.pdf { background: #B30B00; }
+.file-icon.html { background: #E34F26; }
+
+/* Section headings */
+.section-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--pmi-red-dark);
+}
+
+/* Footer */
+.site-footer {
+  background: #111827;
+  color: #9CA3AF;
+  font-size: 0.85rem;
+}
+
+.site-footer a { color: #F4B400; }
+.site-footer a:hover { color: white; }
